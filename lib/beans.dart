@@ -1,4 +1,6 @@
 // 品种
+import 'dart:math';
+
 class Variety {
   int id;
 
@@ -18,11 +20,12 @@ class Variety {
         name = json['name'],
         createTime = DateTime.fromMillisecondsSinceEpoch(json['create_time']);
 
-  Map<String, dynamic> toDbJson() => {
-    'id': id,
-    'name': name,
-    'code': code
-  };
+  Map<String, dynamic> toDbJson() =>
+      {
+        'id': id,
+        'name': name,
+        'code': code
+      };
 
   Map<String, dynamic> toJson() {
     var dbJson = toDbJson();
@@ -32,7 +35,7 @@ class Variety {
 }
 
 // 某个档位上的两次交易
-class GridTwoDirectionTransactions {
+class TwoDirectionTransactions {
   // 档位，从 1 开始
   num level;
   Trade buy;
@@ -40,6 +43,24 @@ class GridTwoDirectionTransactions {
 
   // 一些标记，如 网的比例
   String tag;
+
+  TwoDirectionTransactions(this.level, this.buy, this.sell);
+
+  num profit() {
+    return sell.number * (sell.price - buy.price);
+  }
+
+  int holdingDays() {
+    return max(sell.time.difference(buy.time).inDays, 1);
+  }
+
+  num annualizedRate() {
+    return profit() / (buy.price * buy.number) * (365 / holdingDays());
+  }
+
+  int retainedNumber() {
+    return sell.number - buy.number;
+  }
 }
 
 class Trade {
@@ -53,4 +74,6 @@ class Trade {
 
   // 交易时间
   DateTime time;
+
+  Trade(this.price, this.number, this.time);
 }
