@@ -10,22 +10,61 @@ class Variety {
   // 名字
   String name;
 
+  // 当前价格
+  num currentPrice = 0;
+
+  List<TwoDirectionTransactions> transactions = List.empty();
+
   DateTime createTime;
 
   Variety(this.code, this.name);
 
+  num totalProfit() {
+    return transactions
+        .map((e) => e.totalProfit())
+        .fold(0, (curr, next) => curr + next);
+  }
+
+  num floatingProfit() {
+    return transactions
+        .map((e) => e.floatingProfit())
+        .fold(0, (curr, next) => curr + next);
+  }
+
+  num realProfit() {
+    return transactions
+        .map((e) => e.realProfit())
+        .fold(0, (curr, next) => curr + next);
+  }
+
+  num annualizedRate() {
+    return 0.11;
+  }
+
+  num holdingAmount() {
+    return transactions
+        .map((e) => e.holdingAmount())
+        .fold(0, (curr, next) => curr + next);
+  }
+
+  int twoWayFrequency() {
+    int count = 0;
+    for (var transaction in transactions) {
+      if (transaction.sell != null) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  // todo 少个属性
   Variety.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         code = json['code'],
         name = json['name'],
         createTime = DateTime.fromMillisecondsSinceEpoch(json['create_time']);
 
-  Map<String, dynamic> toDbJson() =>
-      {
-        'id': id,
-        'name': name,
-        'code': code
-      };
+  Map<String, dynamic> toDbJson() => {'id': id, 'name': name, 'code': code};
 
   Map<String, dynamic> toJson() {
     var dbJson = toDbJson();
@@ -44,22 +83,47 @@ class TwoDirectionTransactions {
   // 一些标记，如 网的比例
   String tag;
 
+  num currentPrice = 0;
+
   TwoDirectionTransactions(this.level, this.buy, this.sell);
 
-  num profit() {
-    return sell.number * (sell.price - buy.price);
+  // 总盈利
+  num totalProfit() {
+    return realProfit() + floatingProfit();
   }
 
+  // 实盈
+  num realProfit() {
+    return sell == null ? 0 : sell.number * (sell.price - buy.price);
+  }
+
+  // 虚盈
+  num floatingProfit() {
+    return (currentPrice - buy.price) * retainedNumber();
+  }
+
+  // 持有金额
+  num holdingAmount() {
+    return currentPrice * retainedNumber();
+  }
+
+  // 持有天数
   int holdingDays() {
     return max(sell.time.difference(buy.time).inDays, 1);
   }
 
+  // 年化率
   num annualizedRate() {
-    return profit() / (buy.price * buy.number) * (365 / holdingDays());
+    // fix 需要按照金额比重计算
+    return totalProfit() / (buy.price * buy.number) * (365 / holdingDays());
   }
 
+  // 持有数量
   int retainedNumber() {
-    return sell.number - buy.number;
+    if (sell == null) {
+      return buy.number;
+    }
+    return buy.number - sell.number;
   }
 }
 

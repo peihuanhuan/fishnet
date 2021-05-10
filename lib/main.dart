@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
 import 'package:fishnet/sample/ExpandedTile.dart';
 
+import 'beans.dart';
+
 
 void main() {
   runApp(new AnimatedListSample());
@@ -176,7 +178,7 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MyCardItem("华宝油气", 0.1, 11, 0.18, 1000,3,100);
+    return MyCardItem(Variety("111", "华宝油气"));
     // return ExpandedTile();
     // TextStyle textStyle = Theme.of(context).textTheme.display1;
     // if (selected)

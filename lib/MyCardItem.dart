@@ -1,27 +1,19 @@
+import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'GridTransactionList.dart';
-import 'ListItem.dart';
+import 'beans.dart';
 
 class MyCardItem extends StatelessWidget {
 
-  num id = 1;
-  String title = '华宝油气';
-  num fundPercent = 0.1;
-  num found = 1000;
-  num annualizedRate = 0.1;
-  num realProfit = 1000;
-  int bandFrequency = 3;
-  num floatingProfit = -100;
-
-
   static const double _left = 22;
 
+  Variety variety;
 
-  MyCardItem(this.title, this.fundPercent, this.found, this.annualizedRate,
-      this.realProfit, this.bandFrequency, this.floatingProfit);
+
+  MyCardItem(this.variety);
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +34,7 @@ class MyCardItem extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(_left, 10, 8, 6),
-                      child: new Text(title, style: TextStyle(fontSize: 22)),
+                      child: new Text(variety.name, style: TextStyle(fontSize: 22)),
                     ),
                   ),
                   Flexible(fit: FlexFit.tight, child: SizedBox()),
@@ -58,7 +50,7 @@ class MyCardItem extends StatelessWidget {
                           ),
                           Padding(
                             padding: const EdgeInsets.all(2.0),
-                            child: new Text(toPercent(fundPercent), style: TextStyle(color: color2, fontSize: 18)),
+                            child: new Text(toPercentage(0.1), style: TextStyle(color: color2, fontSize: 18)),
                           ),
                         ],
                       ),
@@ -68,15 +60,15 @@ class MyCardItem extends StatelessWidget {
               ),
               buildPadding(),
               buildFlex([
-                buildKeyValuePair("持有金额", found),
-                buildKeyValuePair("资金年化率", toPercent(annualizedRate))
+                buildKeyValuePair("持有金额", variety.holdingAmount()),
+                buildKeyValuePair("资金年化率", toPercentage(variety.annualizedRate()))
               ]),
               buildFlex([
-                buildKeyValuePair("实盈", realProfit, color: color3),
-                buildKeyValuePair("波段次数", bandFrequency)
+                buildKeyValuePair("实盈", variety.realProfit(), color: color3),
+                buildKeyValuePair("波段次数", variety.twoWayFrequency())
               ]),
               buildFlex([
-                buildKeyValuePair("浮盈", floatingProfit, color: color4),
+                buildKeyValuePair("浮盈", variety.floatingProfit(), color: color4),
               ]),
               buildPadding(),
               Align(
@@ -88,7 +80,7 @@ class MyCardItem extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
                       child: new Text('总收益   ', style: TextStyle(color: color2, fontSize: 12),),
                     ),
-                    new Text((realProfit + floatingProfit).toString(), style: TextStyle(color: color3, fontSize: 16),),
+                    new Text(variety.totalProfit().toString(), style: TextStyle(color: color3, fontSize: 16),),
                   ],),
                 ),
               ),
@@ -98,7 +90,7 @@ class MyCardItem extends StatelessWidget {
 
   }
 
-  String toPercent(num value) => (value * 100).toString() + "%";
+
 
 
 

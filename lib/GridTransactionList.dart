@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,7 @@ class GridTransactionListState extends State<GridTransactionList> {
       child: ExpansionTile(
         tilePadding: EdgeInsets.fromLTRB(0, 0, 8, 0),
         childrenPadding: EdgeInsets.all(0),
-        trailing: Text("￥${transaction.profit()}", style: TextStyle(fontSize: 15)),
+        trailing: Text("￥${transaction.totalProfit()}", style: TextStyle(fontSize: 15)),
         leading: buildLeading("$index"),
         title: buildTitle(transaction),
         children: <Widget>[
@@ -90,7 +91,7 @@ class GridTransactionListState extends State<GridTransactionList> {
               children: <Widget>[
                 buildKeyValuePair("买入时间", yyyyMMddFormat.format(transaction.buy.time)),
                 buildKeyValuePair("持有天数", transaction.holdingDays()),
-                buildKeyValuePair("年化率", "${(transaction.annualizedRate() * 100).toStringAsFixed(2)}%"),
+                buildKeyValuePair("年化率", "${toPercentage(transaction.annualizedRate())}"),
                 buildKeyValuePair("留存份数", transaction.retainedNumber()),
                 Icon(
                   Icons.edit,
@@ -125,7 +126,6 @@ class GridTransactionListState extends State<GridTransactionList> {
           width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
   }
 
-  static const Color color1 = Color(0xAAA3A1A8);
 
   Expanded buildExpanded(int flex, String title, num price, int count,
       {Color color = color2}) {
