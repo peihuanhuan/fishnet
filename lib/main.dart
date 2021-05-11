@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
 import 'package:fishnet/sample/ExpandedTile.dart';
 
-import 'beans.dart';
+import 'entity/Trade.dart';
+import 'persistences/PersistenceLayer.dart';
 
 
 void main() {
@@ -178,7 +179,7 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MyCardItem(Variety("111", "华宝油气"));
+    return MyCardItem(defaultVarieties[0]);
     // return ExpandedTile();
     // TextStyle textStyle = Theme.of(context).textTheme.display1;
     // if (selected)

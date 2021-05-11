@@ -4,7 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'GridTransactionList.dart';
-import 'beans.dart';
+import 'entity/Trade.dart';
+import 'entity/Variety.dart';
 
 class MyCardItem extends StatelessWidget {
 
@@ -21,7 +22,7 @@ class MyCardItem extends StatelessWidget {
       onTap: (){
         Navigator.push( context,
           MaterialPageRoute(builder: (context) {
-            return GridTransactionList();
+            return GridTransactionList(variety.id);
           }));
         },
       child: Card(

@@ -1,4 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:fishnet/entity/TwoDirectionTransactions.dart';
+import 'package:fishnet/persistences/PersistenceLayer.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
@@ -6,13 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'MyCardItem.dart';
-import 'beans.dart';
+import 'entity/Trade.dart';
 
 
 class GridTransactionList extends StatefulWidget {
+
+  int _varietyId;
+
+  GridTransactionList(this._varietyId);
+
   @override
   State<StatefulWidget> createState() {
-    return GridTransactionListState();
+    return GridTransactionListState(_varietyId);
   }
 }
 
@@ -30,6 +37,13 @@ DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
 class GridTransactionListState extends State<GridTransactionList> {
   var _transactions = <TwoDirectionTransactions>[];
 
+  int _varietyId;
+
+
+  GridTransactionListState(this._varietyId) {
+    _transactions = getByVarietyId(_varietyId).transactions;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -40,10 +54,11 @@ class GridTransactionListState extends State<GridTransactionList> {
     Future.delayed(Duration(seconds: 0)).then((e) {
       setState(() {
         //重新构建列表
-        _transactions.add(TwoDirectionTransactions(1,
-            Trade(100, 100, DateTime.now()),
-            Trade(120, 100, DateTime.now())
-        ));
+        // _transactions.add(TwoDirectionTransactions(1,1,
+        //     Trade(100, 100, DateTime.now()),
+        //     Trade(120, 100, DateTime.now())
+        // )
+        // );
       });
     });
   }
@@ -115,8 +130,9 @@ class GridTransactionListState extends State<GridTransactionList> {
         buildKeyValuePair("买入", transaction.buy.price),
         buildKeyValuePair("数量", transaction.buy.number),
         div(),
-        buildKeyValuePair("卖出", transaction.sell.price),
-        buildKeyValuePair("数量", transaction.sell.number)
+
+        buildKeyValuePair("卖出", transaction.sell == null ? 0: transaction.sell.price),
+        buildKeyValuePair("数量", transaction.sell == null ? 0: transaction.sell.number)
       ],
     );
   }
