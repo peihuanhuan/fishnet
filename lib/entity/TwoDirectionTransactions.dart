@@ -15,7 +15,6 @@ class TwoDirectionTransactions {
   //todo 一些标记，如 网的比例
   String tag;
 
-  num currentPrice = 0;
 
   TwoDirectionTransactions(this.id, this.level, this.buy, this.sell);
 
@@ -33,8 +32,8 @@ class TwoDirectionTransactions {
         sell = Trade.fromJson(json['sell']);
 
   // 总盈利
-  num totalProfit() {
-    return realProfit() + floatingProfit();
+  num totalProfit(num currentPrice) {
+    return realProfit() + floatingProfit(currentPrice);
   }
 
   // 实盈
@@ -43,12 +42,12 @@ class TwoDirectionTransactions {
   }
 
   // 虚盈
-  num floatingProfit() {
+  num floatingProfit(num currentPrice) {
     return (currentPrice - buy.price) * retainedNumber();
   }
 
   // 持有金额
-  num holdingAmount() {
+  num holdingAmount(num currentPrice) {
     return currentPrice * retainedNumber();
   }
 
@@ -58,9 +57,9 @@ class TwoDirectionTransactions {
   }
 
   // 年化率
-  num annualizedRate() {
+  num annualizedRate(num currentPrice) {
     // fix 需要按照金额比重计算
-    return totalProfit() / (buy.price * buy.number) * (365 / holdingDays());
+    return totalProfit(currentPrice) / (buy.price * buy.number) * (365 / holdingDays());
   }
 
   // 持有数量

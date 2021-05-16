@@ -1,16 +1,15 @@
+import 'package:fishnet/entity/Variety.dart';
+import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
-import 'package:fishnet/sample/ExpandedTile.dart';
-
-import 'entity/Trade.dart';
 import 'persistences/PersistenceLayer.dart';
-
 
 void main() {
   runApp(new AnimatedListSample());
 }
 
+num totalAmount = 0;
 
 class AnimatedListSample extends StatefulWidget {
   @override
@@ -18,22 +17,28 @@ class AnimatedListSample extends StatefulWidget {
 }
 
 class _AnimatedListSampleState extends State<AnimatedListSample> {
-  final GlobalKey<AnimatedListState> _listKey = new GlobalKey<AnimatedListState>();
-  ListModel<int> _list;
-  int _selectedItem;
+  final GlobalKey<AnimatedListState> _listKey =
+      new GlobalKey<AnimatedListState>();
+  ListModel<Variety> _list;
   int _nextItem; // The next item inserted when the user presses the '+' button.
 
   @override
   void initState() {
-    super.initState();
-    _list = new ListModel<int>(
+    _list = new ListModel<Variety>(
       listKey: _listKey,
-      initialItems: <int>[0, 1, 2],
+      initialItems: defaultVarieties,
       removedItemBuilder: _buildRemovedItem,
     );
     _nextItem = 3;
-  }
 
+    Function callback = (t) {
+      totalAmount = t;
+      print('------ totalAmount ' + totalAmount.toString());
+      setState(() {});
+    };
+
+    calcTotalAmount(_list._items, callback);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,16 +49,18 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
           actions: <Widget>[
             new IconButton(
               icon: const Icon(Icons.add_circle),
-              onPressed: _insert,
+              // onPressed: _insert,
               tooltip: 'insert a new item',
             ),
             new IconButton(
               icon: const Icon(Icons.remove_circle),
-              onPressed: _remove,
+              // onPressed: _remove,
               tooltip: 'remove the selected item',
             ),
           ],
         ),
+        floatingActionButton: MyFloat(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: new Padding(
           padding: const EdgeInsets.all(16.0),
           child: new AnimatedList(
@@ -67,48 +74,38 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   }
 
   // Used to build list items that haven't been removed.
-  Widget _buildItem(BuildContext context, int index, Animation<double> animation) {
+  Widget _buildItem(
+      BuildContext context, int index, Animation<double> animation) {
     return new CardItem(
       animation: animation,
-      item: _list[index],
-      selected: _selectedItem == _list[index],
-      onTap: () {
-        setState(() {
-          _selectedItem = _selectedItem == _list[index] ? null : _list[index];
-        });
-      },
+      item: index,
+      onTap: () {},
     );
   }
 
-  // Used to build an item after it has been removed from the list. This method is
-  // needed because a removed item remains  visible until its animation has
-  // completed (even though it's gone as far this ListModel is concerned).
-  // The widget will be used by the [AnimatedListState.removeItem] method's
-  // [AnimatedListRemovedItemBuilder] parameter.
-  Widget _buildRemovedItem(int item, BuildContext context, Animation<double> animation) {
+  Widget _buildRemovedItem(
+      int item, BuildContext context, Animation<double> animation) {
     return new CardItem(
       animation: animation,
       item: item,
-      selected: false,
-      // No gesture detector here: we don't want removed items to be interactive.
     );
   }
 
-  // Insert the "next item" into the list model.
-  void _insert() {
-    final int index = _selectedItem == null ? _list.length : _list.indexOf(_selectedItem);
-    _list.insert(index, _nextItem++);
-  }
-
-  // Remove the selected item from the list model.
-  void _remove() {
-    if (_selectedItem != null) {
-      _list.removeAt(_list.indexOf(_selectedItem));
-      setState(() {
-        _selectedItem = null;
-      });
-    }
-  }
+// Insert the "next item" into the list model.
+// void _insert() {
+//   final int index = _selectedItem == null ? _list.length : _list.indexOf(_selectedItem);
+//   _list.insert(index, _nextItem++);
+// }
+//
+// // Remove the selected item from the list model.
+// void _remove() {
+//   if (_selectedItem != null) {
+//     _list.removeAt(_list.indexOf(_selectedItem));
+//     setState(() {
+//       _selectedItem = null;
+//     });
+//   }
+// }
 
 }
 
@@ -126,7 +123,7 @@ class ListModel<E> {
     @required this.listKey,
     @required this.removedItemBuilder,
     Iterable<E> initialItems,
-  }) : assert(listKey != null),
+  })  : assert(listKey != null),
         assert(removedItemBuilder != null),
         _items = new List<E>.from(initialItems ?? <E>[]);
 
@@ -144,7 +141,8 @@ class ListModel<E> {
   E removeAt(int index) {
     final E removedItem = _items.removeAt(index);
     if (removedItem != null) {
-      _animatedList.removeItem(index, (BuildContext context, Animation<double> animation) {
+      _animatedList.removeItem(index,
+          (BuildContext context, Animation<double> animation) {
         return removedItemBuilder(removedItem, context, animation);
       });
     }
@@ -152,34 +150,30 @@ class ListModel<E> {
   }
 
   int get length => _items.length;
+
   E operator [](int index) => _items[index];
+
   int indexOf(E item) => _items.indexOf(item);
 }
 
-/// Displays its integer item as 'item N' on a Card whose color is based on
-/// the item's value. The text is displayed in bright green if selected is true.
-/// This widget's height is based on the animation parameter, it varies
-/// from 0 to 128 as the animation varies from 0.0 to 1.0.
 class CardItem extends StatelessWidget {
   const CardItem({
     Key key,
     @required this.animation,
     this.onTap,
     @required this.item,
-    this.selected: false
-  }) : assert(animation != null),
+  })  : assert(animation != null),
         assert(item != null && item >= 0),
-        assert(selected != null),
         super(key: key);
 
   final Animation<double> animation;
   final VoidCallback onTap;
   final int item;
-  final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    return MyCardItem(defaultVarieties[0]);
+    return StatefulFoundCardItem(
+        defaultVarieties[item], totalAmount, UniqueKey());
     // return ExpandedTile();
     // TextStyle textStyle = Theme.of(context).textTheme.display1;
     // if (selected)
@@ -207,3 +201,140 @@ class CardItem extends StatelessWidget {
   }
 }
 
+class MyFloat extends StatelessWidget {
+  _showMyMaterialDialog(BuildContext context) {
+    print("_showMyMaterialDialog");
+    showDialog(
+        context: context,
+        builder: (context) {
+          return new AlertDialog(
+            title: new Text("title"),
+            content: new Text("内容内容内容内容内容内容内容内容内容内容内容"),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: new Text("确认"),
+              ),
+              new FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: new Text("取消"),
+              ),
+            ],
+          );
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+
+    return new FloatingActionButton(
+        child: Icon(
+          Icons.add,
+          color: Colors.black,
+          size: 40,
+        ),
+        onPressed: () {
+          print('FloatingActionButton');
+          _showMyDialog(context);
+        },
+        backgroundColor: Colors.yellow);
+
+    return new FloatingActionButton(
+        child: new Text("showDialog"),
+        onPressed: () {
+          _showMyMaterialDialog(context);
+        });
+  }
+
+  Future<void> _showMyDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        var code;
+        return AlertDialog(
+          title: Text('新建网格'),
+          content: TextField(
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: InputDecoration(
+              labelText: "神秘代码",
+              hintText: "大富大贵",
+            ),
+            onChanged: (str) { code = str;},
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('确认'),
+              onPressed: () async {
+                // showLoading(context, "加载中");
+                var queryName2 = await queryName(code);
+                print(queryName2);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+  void showLoading(context, [String text]) {
+    text = text ?? "Loading...";
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return Center(
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(3.0),
+                  boxShadow: [
+                    //阴影
+                    BoxShadow(
+                      color: Colors.black12,
+                      //offset: Offset(2.0,2.0),
+                      blurRadius: 10.0,
+                    )
+                  ]),
+              padding: EdgeInsets.all(16),
+              margin: EdgeInsets.all(16),
+              constraints: BoxConstraints(minHeight: 120, minWidth: 180),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                    height: 30,
+                    width: 30,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Text(
+                      text,
+                      style: Theme.of(context).textTheme.body2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+}

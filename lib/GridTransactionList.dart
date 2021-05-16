@@ -10,16 +10,15 @@ import 'package:intl/intl.dart';
 import 'MyCardItem.dart';
 import 'entity/Trade.dart';
 
-
 class GridTransactionList extends StatefulWidget {
-
   int _varietyId;
+  num _currentPrice;
 
-  GridTransactionList(this._varietyId);
+  GridTransactionList(this._varietyId, this._currentPrice);
 
   @override
   State<StatefulWidget> createState() {
-    return GridTransactionListState(_varietyId);
+    return _GridTransactionListState();
   }
 }
 
@@ -30,37 +29,15 @@ Color c4 = Color(0xFFFBF4E5);
 
 List<Color> cc = [c1, c2, c3, c4];
 
-
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
 
-
-class GridTransactionListState extends State<GridTransactionList> {
+class _GridTransactionListState extends State<GridTransactionList> {
   var _transactions = <TwoDirectionTransactions>[];
-
-  int _varietyId;
-
-
-  GridTransactionListState(this._varietyId) {
-    _transactions = getByVarietyId(_varietyId).transactions;
-  }
 
   @override
   void initState() {
-    super.initState();
-    _retrieveData();
-  }
-
-  void _retrieveData() {
-    Future.delayed(Duration(seconds: 0)).then((e) {
-      setState(() {
-        //重新构建列表
-        // _transactions.add(TwoDirectionTransactions(1,1,
-        //     Trade(100, 100, DateTime.now()),
-        //     Trade(120, 100, DateTime.now())
-        // )
-        // );
-      });
-    });
+    var variety = getByVarietyId(widget._varietyId);
+    _transactions = variety.transactions;
   }
 
   @override
@@ -73,13 +50,10 @@ class GridTransactionListState extends State<GridTransactionList> {
             child: ListView.builder(
               itemCount: _transactions.length,
               itemBuilder: (context, index) {
-                //如果到了表尾
-                //不足100条，继续获取数据
-                if (_transactions.length - 1 < 2) {
-                  _retrieveData();
-                }
-                //显示单词列表项
-                return buildFlex(index);
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: buildFlex(index),
+                );
               },
               // separatorBuilder: (context, index) => Divider(height: .0),
             ),
@@ -96,18 +70,25 @@ class GridTransactionListState extends State<GridTransactionList> {
       child: ExpansionTile(
         tilePadding: EdgeInsets.fromLTRB(0, 0, 8, 0),
         childrenPadding: EdgeInsets.all(0),
-        trailing: Text("￥${transaction.totalProfit()}", style: TextStyle(fontSize: 15)),
-        leading: buildLeading("$index"),
+        trailing: Text(
+            "￥${transaction.totalProfit(widget._currentPrice).objToString()}",
+            style: TextStyle(
+                fontSize: 15,
+                color: getFontColor(
+                    transaction.totalProfit(widget._currentPrice)))),
+        leading: buildLeading("${transaction.level}"),
         title: buildTitle(transaction),
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: <Widget>[
-                buildKeyValuePair("买入时间", yyyyMMddFormat.format(transaction.buy.time)),
+                buildKeyValuePair(
+                    "买入时间", yyyyMMddFormat.format(transaction.buy.time)),
                 buildKeyValuePair("持有天数", transaction.holdingDays()),
-                buildKeyValuePair("年化率", "${toPercentage(transaction.annualizedRate())}"),
-                buildKeyValuePair("留存份数", transaction.retainedNumber()),
+                buildKeyValuePair("年化率",
+                    "${toPercentage(transaction.annualizedRate(widget._currentPrice))}"),
+                buildKeyValuePair("留存数量", transaction.retainedNumber()),
                 Icon(
                   Icons.edit,
                   color: color2,
@@ -127,21 +108,22 @@ class GridTransactionListState extends State<GridTransactionList> {
     return Flex(
       direction: Axis.horizontal,
       children: [
-        buildKeyValuePair("买入", transaction.buy.price),
+        buildKeyValuePair("买入", transaction.buy.price, fractionDigits: 3),
         buildKeyValuePair("数量", transaction.buy.number),
         div(),
-
-        buildKeyValuePair("卖出", transaction.sell == null ? 0: transaction.sell.price),
-        buildKeyValuePair("数量", transaction.sell == null ? 0: transaction.sell.number)
+        buildKeyValuePair(
+            "卖出", transaction.sell == null ? 0 : transaction.sell.price,
+            fractionDigits: 3),
+        buildKeyValuePair(
+            "数量", transaction.sell == null ? 0 : transaction.sell.number)
       ],
     );
   }
 
   Container div() {
     return Container(
-          width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
+        width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
   }
-
 
   Expanded buildExpanded(int flex, String title, num price, int count,
       {Color color = color2}) {
@@ -176,17 +158,16 @@ class GridTransactionListState extends State<GridTransactionList> {
   Widget buildLeading(Object value, {Color color = color2}) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-            colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
-        shape: BoxShape.circle,
-        // boxShadow: [
-        //   //阴影
-        //   BoxShadow(
-        //       color: Colors.black54,
-        //       offset: Offset(1.0, 1.0),
-        //       blurRadius: 2.0)
-        // ]
-      ),
+          gradient: LinearGradient(
+              colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
+          shape: BoxShape.circle,
+          boxShadow: [
+            //阴影
+            BoxShadow(
+                color: Colors.black54,
+                offset: Offset(1.0, 1.0),
+                blurRadius: 2.0)
+          ]),
       child: Container(
         padding: EdgeInsets.all(8),
         child: AutoSizeText(value.toString(),
@@ -196,7 +177,10 @@ class GridTransactionListState extends State<GridTransactionList> {
   }
 
   Expanded buildKeyValuePair(String title, Object value,
-      {Color color = color2, titleSize = 12.0, valueSize = 14.0}) {
+      {Color color = color2,
+      fractionDigits = 2,
+      titleSize = 12.0,
+      valueSize = 14.0}) {
     return Expanded(
       flex: 1,
       child: Align(
@@ -217,7 +201,7 @@ class GridTransactionListState extends State<GridTransactionList> {
                 alignment: Alignment.centerLeft,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
-                  child: new Text(value.toString(),
+                  child: new Text(value.objToString(fractionDigits),
                       style: TextStyle(color: color, fontSize: valueSize)),
                 ),
               ),

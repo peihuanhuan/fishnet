@@ -9,28 +9,10 @@ class Variety {
   // 名字
   String name;
 
-  // 当前价格
-  num currentPrice = 0;
-
   List<TwoDirectionTransactions> transactions = List.empty();
 
   DateTime createTime;
 
-  //
-  // Variety.fromJson(Map<String, dynamic> json) {
-  //   id = json["id"]?.toInt();
-  //   code = json["code"]?.toString();
-  //   name = json["name"]?.toString();
-  //   if (json["transactions"] != null) {
-  //     final v = json["transactions"];
-  //     final arr0 = <SomeRootEntityTransactions>[];
-  //     v.forEach((v) {
-  //       arr0.add(SomeRootEntityTransactions.fromJson(v));
-  //     });
-  //     transactions = arr0;
-  //   }
-  //   createTime = json["createTime"]?.toString();
-  // }
 
   factory Variety.fromJson(Map<String, dynamic> json) {
     var transactions = <TwoDirectionTransactions>[];
@@ -62,15 +44,15 @@ class Variety {
 
   Variety(this.id, this.code, this.name, this.transactions, this.createTime);
 
-  num totalProfit() {
+  num totalProfit(num currentPrice) {
     return transactions
-        .map((e) => e.totalProfit())
+        .map((e) => e.totalProfit(currentPrice))
         .fold(0, (curr, next) => curr + next);
   }
 
-  num floatingProfit() {
+  num floatingProfit(num currentPrice) {
     return transactions
-        .map((e) => e.floatingProfit())
+        .map((e) => e.floatingProfit(currentPrice))
         .fold(0, (curr, next) => curr + next);
   }
 
@@ -84,9 +66,9 @@ class Variety {
     return 0.11;
   }
 
-  num holdingAmount() {
+  num holdingAmount(num currentPrice) {
     return transactions
-        .map((e) => e.holdingAmount())
+        .map((e) => e.holdingAmount(currentPrice))
         .fold(0, (curr, next) => curr + next);
   }
 
