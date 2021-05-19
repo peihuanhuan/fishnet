@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fishnet/entity/Variety.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/foundation.dart';
@@ -201,140 +203,89 @@ class CardItem extends StatelessWidget {
   }
 }
 
-class MyFloat extends StatelessWidget {
-  _showMyMaterialDialog(BuildContext context) {
-    print("_showMyMaterialDialog");
-    showDialog(
-        context: context,
-        builder: (context) {
-          return new AlertDialog(
-            title: new Text("title"),
-            content: new Text("内容内容内容内容内容内容内容内容内容内容内容"),
-            actions: <Widget>[
-              new FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: new Text("确认"),
-              ),
-              new FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: new Text("取消"),
-              ),
-            ],
-          );
-        });
-  }
+class MyFloat extends StatefulWidget {
+
+
+  @override
+  _MyFloatState createState() => _MyFloatState();
+}
+
+class _MyFloatState extends State<MyFloat> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-
     return new FloatingActionButton(
-        child: Icon(
-          Icons.add,
-          color: Colors.black,
-          size: 40,
-        ),
-        onPressed: () {
-          print('FloatingActionButton');
-          _showMyDialog(context);
-        },
-        backgroundColor: Colors.yellow);
-
-    return new FloatingActionButton(
-        child: new Text("showDialog"),
-        onPressed: () {
-          _showMyMaterialDialog(context);
-        });
+        child: Icon(Icons.add, color: Colors.black, size: 40,),
+        onPressed: () => _showMyDialog(context),
+        backgroundColor: Colors.yellow
+    );
   }
 
   Future<void> _showMyDialog(BuildContext context) {
     return showDialog(
       context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        var code;
-        return AlertDialog(
-          title: Text('新建网格'),
-          content: TextField(
-            autofocus: true,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            decoration: InputDecoration(
-              labelText: "神秘代码",
-              hintText: "大富大贵",
-            ),
-            onChanged: (str) { code = str;},
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('确认'),
-              onPressed: () async {
-                // showLoading(context, "加载中");
-                var queryName2 = await queryName(code);
-                print(queryName2);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+      barrierDismissible: true, // user must tap button!
+      builder: (BuildContext context) => DialogStatefulWidget(),
     );
   }
 
+}
 
+class DialogStatefulWidget extends StatefulWidget {
 
-  void showLoading(context, [String text]) {
-    text = text ?? "Loading...";
-    showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (context) {
-          return Center(
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(3.0),
-                  boxShadow: [
-                    //阴影
-                    BoxShadow(
-                      color: Colors.black12,
-                      //offset: Offset(2.0,2.0),
-                      blurRadius: 10.0,
-                    )
-                  ]),
-              padding: EdgeInsets.all(16),
-              margin: EdgeInsets.all(16),
-              constraints: BoxConstraints(minHeight: 120, minWidth: 180),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(
-                    height: 30,
-                    width: 30,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: Text(
-                      text,
-                      style: Theme.of(context).textTheme.body2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
+  @override
+  _DialogStatefulWidgetState createState() => _DialogStatefulWidgetState();
+}
+
+class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
+  int _loading = 0;
+  var _code;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('新建网格'),
+      content: TextField(
+        autofocus: true,
+        keyboardType: TextInputType.number,
+        maxLength: 6,
+        decoration: InputDecoration(
+          labelText: "神秘代码",
+          hintText: "大富大贵",
+        ),
+        onChanged: (str) {
+          _code = str;
+        },
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: Text('取消'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+          child: Row(
+            key: UniqueKey(),
+            children: [
+              Text('确认'),
+              Container(
+                  height: 15.0 * _loading,
+                  width: 15,
+                  child: CircularProgressIndicator()),
+            ],
+          ),
+          onPressed: () async {
+            setState(() {
+              _loading = 1;
+            });
+            var queryName2 = await queryName(_code);
+            print(queryName2);
+              setState(() {
+                _loading = 0;
+            });
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
   }
 }
