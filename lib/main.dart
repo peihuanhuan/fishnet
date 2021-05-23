@@ -8,7 +8,6 @@ import 'package:fishnet/MyCardItem.dart';
 import 'persistences/PersistenceLayer.dart';
 import 'package:flutter/services.dart';
 
-
 void main() {
   runApp(new AnimatedListSample());
 }
@@ -63,13 +62,16 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
             ),
           ],
         ),
-        floatingActionButton: MyFloat((code, name) => _insert(code, name)),
+        floatingActionButton:
+            MyFloat("新建网格", "", (code) => _insert(code), (code) {
+          return code.length == 6;
+        }),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: new Padding(
           padding: const EdgeInsets.all(16.0),
-          child: new AnimatedList(
+          child: ListView.builder(
             key: _listKey,
-            initialItemCount: _list.length,
+            itemCount: _list.length,
             itemBuilder: _buildItem,
           ),
         ),
@@ -78,17 +80,23 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   }
 
   // Used to build list items that haven't been removed.
-  Widget _buildItem(
-      BuildContext context, int index, Animation<double> animation) {
+  Widget _buildItem(BuildContext context, int index) {
     return new CardItem(
-      animation: animation,
       item: _list[index],
       onLongPress: () {
-        _list.removeAt(index);
-        print('长按 $index');
-        setState(() {
-
-        });
+        showDialog(
+          context: context,
+          barrierDismissible: true, // user must tap button!
+          builder: (BuildContext context) =>
+              DialogStatefulWidget("删除网格", "输入${_list[index].name}代码", (code) {
+            setState(() {
+              //todo 持久化
+              _list.removeAt(index);
+            });
+          }, (code) {
+            return code == _list[index].code;
+          }),
+        );
       },
     );
   }
@@ -96,36 +104,29 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   Widget _buildRemovedItem(
       Variety item, BuildContext context, Animation<double> animation) {
     return new CardItem(
-      animation: animation,
+      // animation: animation,
       item: item,
     );
   }
 
 // Insert the "next item" into the list model.
-  void _insert(String code, String name) {
+  Future<void> _insert(String code) async {
+    var name = await queryName(code);
+
     print('插入啦 $code $name');
 
     var variety = Variety(id(), code, name, List.empty(), DateTime.now());
     _list.insert(0, variety);
+    setState(() {});
     defaultVarieties.add(variety);
   }
-void _remove(Variety variety) {
+
+  void _remove(Variety variety) {
     _list.removeAt(_list.indexOf(variety));
-    setState(() {
-    });
+    setState(() {});
   }
 }
 
-
-/// Keeps a Dart List in sync with an AnimatedList.
-///
-/// The [insert] and [removeAt] methods apply to both the internal list and the
-/// animated list that belongs to [listKey].
-///
-/// This class only exposes as much of the Dart List API as is needed by the
-/// sample app. More list methods are easily added, however methods that mutate the
-/// list must make the same changes to the animated list in terms of
-/// [AnimatedListState.insertItem] and [AnimatedList.removeItem].
 class ListModel<E> {
   ListModel({
     @required this.listKey,
@@ -139,21 +140,21 @@ class ListModel<E> {
   final dynamic removedItemBuilder;
   final List<E> _items;
 
-  AnimatedListState get _animatedList => listKey.currentState;
+  // AnimatedListState get _animatedList => listKey.currentState;
 
   void insert(int index, E item) {
     _items.insert(index, item);
-    _animatedList.insertItem(index);
+    // _animatedList.insertItem(index);
   }
 
   E removeAt(int index) {
     final E removedItem = _items.removeAt(index);
-    if (removedItem != null) {
-      _animatedList.removeItem(index,
-          (BuildContext context, Animation<double> animation) {
-        return removedItemBuilder(removedItem, context, animation);
-      });
-    }
+    // if (removedItem != null) {
+    //   _animatedList.removeItem(index,
+    //       (BuildContext context, Animation<double> animation) {
+    //     return removedItemBuilder(removedItem, context, animation);
+    //   });
+    // }
     return removedItem;
   }
 
@@ -167,12 +168,10 @@ class ListModel<E> {
 class CardItem extends StatelessWidget {
   const CardItem({
     Key key,
-    @required this.animation,
     this.onLongPress,
     @required this.item,
   }) : super(key: key);
 
-  final Animation<double> animation;
   final VoidCallback onLongPress;
   final Variety item;
 
@@ -183,9 +182,13 @@ class CardItem extends StatelessWidget {
 }
 
 class MyFloat extends StatefulWidget {
+  String _dialogTitle;
+  String _hintTitle;
   Function _insert;
+  Function _checkOkButtonEnable;
 
-  MyFloat(this._insert);
+  MyFloat(this._dialogTitle, this._hintTitle, this._insert,
+      this._checkOkButtonEnable);
 
   @override
   _MyFloatState createState() => _MyFloatState();
@@ -195,11 +198,7 @@ class _MyFloatState extends State<MyFloat> {
   @override
   Widget build(BuildContext context) {
     return new FloatingActionButton(
-        child: Icon(
-          Icons.add,
-          color: Colors.black,
-          size: 40,
-        ),
+        child: Icon(Icons.add, color: Colors.black, size: 40),
         onPressed: () => _showMyDialog(context),
         backgroundColor: Colors.yellow);
   }
@@ -208,15 +207,23 @@ class _MyFloatState extends State<MyFloat> {
     return showDialog(
       context: context,
       barrierDismissible: true, // user must tap button!
-      builder: (BuildContext context) => DialogStatefulWidget(widget._insert),
+      builder: (BuildContext context) => DialogStatefulWidget(
+          widget._dialogTitle,
+          widget._hintTitle,
+          widget._insert,
+          widget._checkOkButtonEnable),
     );
   }
 }
 
 class DialogStatefulWidget extends StatefulWidget {
-  Function insert;
+  Function _okFunction;
+  Function _checkOkButtonEnable;
+  String _dialogTitle;
+  String _hintTitle;
 
-  DialogStatefulWidget(this.insert);
+  DialogStatefulWidget(this._dialogTitle, this._hintTitle, this._okFunction,
+      this._checkOkButtonEnable);
 
   @override
   _DialogStatefulWidgetState createState() => _DialogStatefulWidgetState();
@@ -230,22 +237,22 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('新建网格'),
+      title: Text(widget._dialogTitle),
       content: TextField(
         autofocus: true,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: "神秘代码",
-          hintText: "",
+          hintText: widget._hintTitle,
         ),
-          maxLength: 6,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(6)
-          ],
+        maxLength: 6,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(6)
+        ],
         onChanged: (str) {
           _code = str;
-          if(_code.length == 6) {
+          if (widget._checkOkButtonEnable(_code)) {
             setState(() {
               disabled = false;
             });
@@ -258,31 +265,29 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         TextButton(
-          child: Row(
-            children: [
-              Text('确认'),
-              Container(
-                  height: 15.0 * _loading,
-                  width: 15,
-                  child: CircularProgressIndicator()),
-            ],
-          ),
-          onPressed:  onOkPressed(context)
-        ),
+            child: Row(
+              children: [
+                Text('确认'),
+                Container(
+                    height: 15.0 * _loading,
+                    width: 15,
+                    child: CircularProgressIndicator()),
+              ],
+            ),
+            onPressed: onOkPressed(context)),
       ],
     );
   }
 
   Function onOkPressed(BuildContext context) {
-    if(disabled) {
+    if (disabled) {
       return null;
     }
     return () async {
       setState(() {
         _loading = 1;
       });
-      var name = await queryName(_code);
-      widget.insert(_code, name);
+      widget._okFunction(_code);
       setState(() {
         _loading = 0;
       });

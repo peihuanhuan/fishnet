@@ -7,8 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'MyCardItem.dart';
-import 'entity/Trade.dart';
 
 class GridTransactionList extends StatefulWidget {
   int _varietyId;
@@ -42,6 +40,16 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
   @override
   Widget build(BuildContext context) {
+
+    if(_transactions.isEmpty) {
+      return Container(
+        color: Colors.white,
+        child: Center(
+          child: Text("还没有数据哦", textAlign: TextAlign.center, style: TextStyle(color: color1, fontSize: 12),),
+        ),
+      );
+    }
+
     return Container(
       color: Colors.white,
       child: Column(
@@ -52,10 +60,9 @@ class _GridTransactionListState extends State<GridTransactionList> {
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: buildFlex(index),
+                  child: buildItemCard(index),
                 );
               },
-              // separatorBuilder: (context, index) => Divider(height: .0),
             ),
           )
         ],
@@ -63,7 +70,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     );
   }
 
-  Widget buildFlex(int index) {
+  Widget buildItemCard(int index) {
     var transaction = _transactions[index];
     Widget card = Card(
       color: cc[index % 4],
