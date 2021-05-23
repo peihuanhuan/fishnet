@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
 import 'persistences/PersistenceLayer.dart';
+import 'package:flutter/services.dart';
+
 
 void main() {
   runApp(new AnimatedListSample());
@@ -61,7 +63,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
             ),
           ],
         ),
-        floatingActionButton: MyFloat(),
+        floatingActionButton: MyFloat((code, name) => _insert(code, name)),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: new Padding(
           padding: const EdgeInsets.all(16.0),
@@ -80,13 +82,19 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
       BuildContext context, int index, Animation<double> animation) {
     return new CardItem(
       animation: animation,
-      item: index,
-      onTap: () {},
+      item: _list[index],
+      onLongPress: () {
+        _list.removeAt(index);
+        print('长按 $index');
+        setState(() {
+
+        });
+      },
     );
   }
 
   Widget _buildRemovedItem(
-      int item, BuildContext context, Animation<double> animation) {
+      Variety item, BuildContext context, Animation<double> animation) {
     return new CardItem(
       animation: animation,
       item: item,
@@ -94,22 +102,20 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   }
 
 // Insert the "next item" into the list model.
-// void _insert() {
-//   final int index = _selectedItem == null ? _list.length : _list.indexOf(_selectedItem);
-//   _list.insert(index, _nextItem++);
-// }
-//
-// // Remove the selected item from the list model.
-// void _remove() {
-//   if (_selectedItem != null) {
-//     _list.removeAt(_list.indexOf(_selectedItem));
-//     setState(() {
-//       _selectedItem = null;
-//     });
-//   }
-// }
+  void _insert(String code, String name) {
+    print('插入啦 $code $name');
 
+    var variety = Variety(id(), code, name, List.empty(), DateTime.now());
+    _list.insert(0, variety);
+    defaultVarieties.add(variety);
+  }
+void _remove(Variety variety) {
+    _list.removeAt(_list.indexOf(variety));
+    setState(() {
+    });
+  }
 }
+
 
 /// Keeps a Dart List in sync with an AnimatedList.
 ///
@@ -162,76 +168,55 @@ class CardItem extends StatelessWidget {
   const CardItem({
     Key key,
     @required this.animation,
-    this.onTap,
+    this.onLongPress,
     @required this.item,
-  })  : assert(animation != null),
-        assert(item != null && item >= 0),
-        super(key: key);
+  }) : super(key: key);
 
   final Animation<double> animation;
-  final VoidCallback onTap;
-  final int item;
+  final VoidCallback onLongPress;
+  final Variety item;
 
   @override
   Widget build(BuildContext context) {
-    return StatefulFoundCardItem(
-        defaultVarieties[item], totalAmount, UniqueKey());
-    // return ExpandedTile();
-    // TextStyle textStyle = Theme.of(context).textTheme.display1;
-    // if (selected)
-    //   textStyle = textStyle.copyWith(color: Colors.lightGreenAccent[400]);
-    // return new Padding(
-    //   padding: const EdgeInsets.all(2.0),
-    //   child: new SizeTransition(
-    //     axis: Axis.vertical,
-    //     sizeFactor: animation,
-    //     child: new GestureDetector(
-    //       behavior: HitTestBehavior.opaque,
-    //       onTap: onTap,
-    //       child: new SizedBox(
-    //         height: 128.0,
-    //         child: new Card(
-    //           color: Colors.primaries[item % Colors.primaries.length],
-    //           child: new Center(
-    //             child: new Text('Item $item', style: textStyle),
-    //           ),
-    //         ),
-    //       ),
-    //     ),
-    //   ),
-    // );
+    return StatefulFoundCardItem(item, totalAmount, UniqueKey(), onLongPress);
   }
 }
 
 class MyFloat extends StatefulWidget {
+  Function _insert;
 
+  MyFloat(this._insert);
 
   @override
   _MyFloatState createState() => _MyFloatState();
 }
 
 class _MyFloatState extends State<MyFloat> {
-
   @override
   Widget build(BuildContext context) {
     return new FloatingActionButton(
-        child: Icon(Icons.add, color: Colors.black, size: 40,),
+        child: Icon(
+          Icons.add,
+          color: Colors.black,
+          size: 40,
+        ),
         onPressed: () => _showMyDialog(context),
-        backgroundColor: Colors.yellow
-    );
+        backgroundColor: Colors.yellow);
   }
 
   Future<void> _showMyDialog(BuildContext context) {
     return showDialog(
       context: context,
       barrierDismissible: true, // user must tap button!
-      builder: (BuildContext context) => DialogStatefulWidget(),
+      builder: (BuildContext context) => DialogStatefulWidget(widget._insert),
     );
   }
-
 }
 
 class DialogStatefulWidget extends StatefulWidget {
+  Function insert;
+
+  DialogStatefulWidget(this.insert);
 
   @override
   _DialogStatefulWidgetState createState() => _DialogStatefulWidgetState();
@@ -239,7 +224,8 @@ class DialogStatefulWidget extends StatefulWidget {
 
 class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   int _loading = 0;
-  var _code;
+  String _code;
+  bool disabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -248,13 +234,22 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       content: TextField(
         autofocus: true,
         keyboardType: TextInputType.number,
-        maxLength: 6,
         decoration: InputDecoration(
           labelText: "神秘代码",
-          hintText: "大富大贵",
+          hintText: "",
         ),
+          maxLength: 6,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6)
+          ],
         onChanged: (str) {
           _code = str;
+          if(_code.length == 6) {
+            setState(() {
+              disabled = false;
+            });
+          }
         },
       ),
       actions: <Widget>[
@@ -264,7 +259,6 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
         ),
         TextButton(
           child: Row(
-            key: UniqueKey(),
             children: [
               Text('确认'),
               Container(
@@ -273,19 +267,26 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
                   child: CircularProgressIndicator()),
             ],
           ),
-          onPressed: () async {
-            setState(() {
-              _loading = 1;
-            });
-            var queryName2 = await queryName(_code);
-            print(queryName2);
-              setState(() {
-                _loading = 0;
-            });
-            Navigator.of(context).pop();
-          },
+          onPressed:  onOkPressed(context)
         ),
       ],
     );
+  }
+
+  Function onOkPressed(BuildContext context) {
+    if(disabled) {
+      return null;
+    }
+    return () async {
+      setState(() {
+        _loading = 1;
+      });
+      var name = await queryName(_code);
+      widget.insert(_code, name);
+      setState(() {
+        _loading = 0;
+      });
+      Navigator.of(context).pop();
+    };
   }
 }

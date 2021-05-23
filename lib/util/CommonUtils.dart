@@ -6,6 +6,9 @@ import 'package:fishnet/entity/Variety.dart';
 
 String toPercentage(num value) => (value * 100).toStringAsFixed(2) + "%";
 
+int id() => DateTime.now().millisecondsSinceEpoch;
+
+
 extension ObjectExtension on Object {
   String objToString([int fractionDigits = 2]) {
     var value = this;

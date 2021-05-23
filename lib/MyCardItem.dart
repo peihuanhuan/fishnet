@@ -14,8 +14,9 @@ class StatefulFoundCardItem extends StatefulWidget {
   Variety _variety;
   num _totalMoney;
   Key key;
+  VoidCallback _onLongPress;
 
-  StatefulFoundCardItem(this._variety, this._totalMoney, this.key)
+  StatefulFoundCardItem(this._variety, this._totalMoney, this.key, this._onLongPress)
       : super(key: key);
 
   @override
@@ -51,47 +52,51 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
           return GridTransactionList(widget._variety.id, foundPrice.price);
         }));
       },
+      onLongPress: widget._onLongPress,
       child: Card(
           color: Colors.white,
           child: Column(
             children: [
               Row(
                 children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(_left, 10, 8, 6),
-                      child: new Text(widget._variety.name,
-                          style: TextStyle(fontSize: 22)),
-                    ),
-                  ),
-                  Flexible(fit: FlexFit.tight, child: SizedBox()),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(_left, 10, 8, 6),
+                    child: Align(
+                      alignment: Alignment.centerRight,
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: new Text('占比',
-                                style: TextStyle(color: color1, fontSize: 10)),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: new Text(
-                                toPercentage(widget._variety
-                                        .holdingAmount(foundPrice.price) /
-                                    widget._totalMoney),
-                                style: TextStyle(color: color2, fontSize: 18)),
-                          ),
+                          new Text(widget._variety.name, style: TextStyle(fontSize: 22)),
+                          new Text(widget._variety.code, style: TextStyle(fontSize: 12, color: color2)),
                         ],
                       ),
                     ),
                   ),
+                  Flexible(fit: FlexFit.tight, child: SizedBox()),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: new Text('占比',
+                              style: TextStyle(color: color1, fontSize: 10)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: new Text(
+                              toPercentage(widget._variety
+                                      .holdingAmount(foundPrice.price) /
+                                  widget._totalMoney),
+                              style: TextStyle(color: color2, fontSize: 18)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              buildPadding(),
+              buildDivider(),
               buildFlex([
                 buildKeyValuePair(
                     "持有金额", widget._variety.holdingAmount(foundPrice.price)),
@@ -110,31 +115,28 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                     color: getFontColor(
                         widget._variety.floatingProfit(foundPrice.price))),
               ]),
-              buildPadding(),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(_left, 10, 8, 6),
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
-                        child: new Text(
-                          '总收益   ',
-                          style: TextStyle(color: color2, fontSize: 12),
-                        ),
+              buildDivider(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(_left, 10, 8, 6),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
+                      child: new Text(
+                        '总收益   ',
+                        style: TextStyle(color: color2, fontSize: 12),
                       ),
-                      new Text(
-                        widget._variety
-                            .totalProfit(foundPrice.price)
-                            .objToString(),
-                        style: TextStyle(
-                            color: getFontColor(
-                                widget._variety.totalProfit(foundPrice.price)),
-                            fontSize: 16),
-                      ),
-                    ],
-                  ),
+                    ),
+                    new Text(
+                      widget._variety
+                          .totalProfit(foundPrice.price)
+                          .objToString(),
+                      style: TextStyle(
+                          color: getFontColor(
+                              widget._variety.totalProfit(foundPrice.price)),
+                          fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -151,7 +153,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
     return "$different分钟前";
   }
 
-  Padding buildPadding() {
+  Padding buildDivider() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(_left, 0, 8, 0),
       child: Divider(height: 0.5, color: Color(0xFFABAA9A)),
