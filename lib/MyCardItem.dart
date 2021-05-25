@@ -13,11 +13,18 @@ import 'entity/Variety.dart';
 class StatefulFoundCardItem extends StatefulWidget {
   Variety _variety;
   num _totalMoney;
+  FoundPrice _foundPrice;
+
   Key key;
   VoidCallback _onLongPress;
 
-  StatefulFoundCardItem(this._variety, this._totalMoney, this.key, this._onLongPress)
-      : super(key: key);
+  StatefulFoundCardItem(this._variety, this._totalMoney,this._foundPrice, this.key, this._onLongPress)
+      : super(key: key) {
+    if(_foundPrice == null) {
+      _foundPrice = FoundPrice(0, DateTime.now().add(Duration(minutes: -60)));
+    }
+    print(_foundPrice);
+  }
 
   @override
   State<StatefulWidget> createState() {
@@ -28,28 +35,29 @@ class StatefulFoundCardItem extends StatefulWidget {
 class _FoundCardItem extends State<StatefulFoundCardItem> {
   static const double _left = 22;
 
-  var foundPrice = FoundPrice(0, DateTime.now().add(Duration(minutes: -60)));
+  // var foundPrice = FoundPrice(0, DateTime.now().add(Duration(minutes: -60)));
 
   @override
   void initState() {
-    checkUpdateFoundPrice(widget._variety.code);
+    // checkUpdateFoundPrice(widget._variety.code);
   }
 
-  checkUpdateFoundPrice(String code, {Function() f}) async {
-    if (foundPrice == null ||
-        foundPrice.lastQueryTime.difference(DateTime.now()).inMinutes.abs() >
-            3) {
-      foundPrice = await queryPrice(code);
-      setState(() {});
-    }
-  }
+  // checkUpdateFoundPrice(String code, {Function() f}) async {
+  //   if (foundPrice == null ||
+  //       foundPrice.lastQueryTime.difference(DateTime.now()).inMinutes.abs() >
+  //           3) {
+  //     foundPrice = await queryPrice(code);
+  //     // todo 这里会报警
+  //     setState(() {});
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return GridTransactionList(widget._variety.id, foundPrice.price);
+          return GridTransactionList(widget._variety.id, widget._foundPrice.price);
         }));
       },
       onLongPress: widget._onLongPress,
@@ -86,9 +94,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                         Padding(
                           padding: const EdgeInsets.all(2.0),
                           child: new Text(
-                              toPercentage(widget._variety
-                                      .holdingAmount(foundPrice.price) /
-                                  widget._totalMoney),
+                              buildPercentage(),
                               style: TextStyle(color: color2, fontSize: 18)),
                         ),
                       ],
@@ -99,7 +105,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
               buildDivider(),
               buildFlex([
                 buildKeyValuePair(
-                    "持有金额", widget._variety.holdingAmount(foundPrice.price)),
+                    "持有金额", widget._variety.holdingAmount(widget._foundPrice.price).outlierDesc(0, "获取净值中")),
                 buildKeyValuePair(
                     "资金年化率", toPercentage(widget._variety.annualizedRate()))
               ]),
@@ -110,10 +116,10 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
               ]),
               buildFlex([
                 buildKeyValuePair(
-                    "浮盈 (现价 ${foundPrice.price.toStringAsFixed(3)}，更新于${updateTimeStr()})",
-                    widget._variety.floatingProfit(foundPrice.price),
+                    "浮盈 (现价 ${widget._foundPrice.price.toStringAsFixed(3)}，更新于${updateTimeStr()})",
+                    widget._variety.floatingProfit(widget._foundPrice.price),
                     color: getFontColor(
-                        widget._variety.floatingProfit(foundPrice.price))),
+                        widget._variety.floatingProfit(widget._foundPrice.price))),
               ]),
               buildDivider(),
               Padding(
@@ -129,11 +135,11 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                     ),
                     new Text(
                       widget._variety
-                          .totalProfit(foundPrice.price)
+                          .totalProfit(widget._foundPrice.price)
                           .objToString(),
                       style: TextStyle(
                           color: getFontColor(
-                              widget._variety.totalProfit(foundPrice.price)),
+                              widget._variety.totalProfit(widget._foundPrice.price)),
                           fontSize: 16),
                     ),
                   ],
@@ -144,9 +150,17 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
     );
   }
 
+  String buildPercentage() {
+    if(widget._totalMoney == 0) {
+      return "计算中";
+    }
+    var percent = widget._variety.holdingAmount(widget._foundPrice.price) / widget._totalMoney;
+    return toPercentage(percent);
+  }
+
   String updateTimeStr() {
     var different =
-        DateTime.now().difference(foundPrice.lastQueryTime).inMinutes;
+        DateTime.now().difference(widget._foundPrice.lastQueryTime).inMinutes;
     if (different == 0) {
       return "刚刚";
     }

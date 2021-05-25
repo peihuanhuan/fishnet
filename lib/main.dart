@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fishnet/entity/FoundPrice.dart';
 import 'package:fishnet/entity/Variety.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/foundation.dart';
@@ -12,39 +13,52 @@ void main() {
   runApp(new AnimatedListSample());
 }
 
-num totalAmount = 0;
 
 class AnimatedListSample extends StatefulWidget {
   @override
   _AnimatedListSampleState createState() => new _AnimatedListSampleState();
 }
 
+num totalAmount = 0;
+var foundPriceMap = Map<String, FoundPrice>();
+
+
 class _AnimatedListSampleState extends State<AnimatedListSample> {
   final GlobalKey<AnimatedListState> _listKey =
       new GlobalKey<AnimatedListState>();
   ListModel<Variety> _list;
-  int _nextItem; // The next item inserted when the user presses the '+' button.
+
+
 
   @override
-  void initState() {
+  void initState()  {
     _list = new ListModel<Variety>(
       listKey: _listKey,
       initialItems: defaultVarieties,
       removedItemBuilder: _buildRemovedItem,
     );
-    _nextItem = 3;
 
-    Function callback = (t) {
-      totalAmount = t;
-      print('------ totalAmount ' + totalAmount.toString());
+    calcTotalAmount();
+
+    print('initState done');
+  }
+
+  void calcTotalAmount() async {
+    totalAmount = 0;
+    for( var variety in _list._items) {
+      var foundPrice = await queryPrice(variety.code);
+      foundPriceMap[variety.code] = foundPrice;
+      totalAmount +=  variety.holdingAmount(foundPrice.price);
+      if(variety == _list._items.last) {
+        print('------ totalAmount ' + totalAmount.toString());
+      }
       setState(() {});
-    };
-
-    calcTotalAmount(_list._items, callback);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('build _AnimatedListSampleState');
     return new MaterialApp(
       home: new Scaffold(
         appBar: new AppBar(
@@ -177,7 +191,7 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StatefulFoundCardItem(item, totalAmount, UniqueKey(), onLongPress);
+    return StatefulFoundCardItem(item, totalAmount,foundPriceMap[item.code], UniqueKey(), onLongPress);
   }
 }
 
