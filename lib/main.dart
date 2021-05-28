@@ -13,7 +13,6 @@ void main() {
   runApp(new AnimatedListSample());
 }
 
-
 class AnimatedListSample extends StatefulWidget {
   @override
   _AnimatedListSampleState createState() => new _AnimatedListSampleState();
@@ -22,38 +21,39 @@ class AnimatedListSample extends StatefulWidget {
 num totalAmount = 0;
 var foundPriceMap = Map<String, FoundPrice>();
 
-
 class _AnimatedListSampleState extends State<AnimatedListSample> {
   final GlobalKey<AnimatedListState> _listKey =
       new GlobalKey<AnimatedListState>();
   ListModel<Variety> _list;
 
-
-
   @override
-  void initState()  {
+  void initState() {
     _list = new ListModel<Variety>(
       listKey: _listKey,
       initialItems: defaultVarieties,
       removedItemBuilder: _buildRemovedItem,
     );
-
     calcTotalAmount();
 
-    print('initState done');
   }
 
   void calcTotalAmount() async {
+
+    var foundPrices =
+        await queryPrice(_list._items.map((e) => e.code).toList());
+
+    foundPrices.forEach((foundPrice) {
+      foundPriceMap[foundPrice.code] = foundPrice;
+    });
+
+
     totalAmount = 0;
-    for( var variety in _list._items) {
-      var foundPrice = await queryPrice(variety.code);
-      foundPriceMap[variety.code] = foundPrice;
-      totalAmount +=  variety.holdingAmount(foundPrice.price);
-      if(variety == _list._items.last) {
-        print('------ totalAmount ' + totalAmount.toString());
-      }
-      setState(() {});
-    }
+    _list._items.forEach((variety) {
+      totalAmount += variety.holdingAmount(foundPriceMap[variety.code].price);
+    });
+
+    print('total amount  ============ $totalAmount');
+    setState(() {});
   }
 
   @override
@@ -191,7 +191,8 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StatefulFoundCardItem(item, totalAmount,foundPriceMap[item.code], UniqueKey(), onLongPress);
+    return StatefulFoundCardItem(
+        item, totalAmount, foundPriceMap[item.code], UniqueKey(), onLongPress);
   }
 }
 

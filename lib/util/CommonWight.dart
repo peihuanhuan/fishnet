@@ -45,15 +45,20 @@ Expanded buildKeyValuePair(String title, Object value, {Color color = color2, ti
 }
 
 
-Color getFontColor(num value) {
-  if(value < 0) {
+Color getFontColor(Object value) {
+  var normal = Color(0xFF7D6B7D);
+  if(!(value is num)) {
+    return normal;
+  }
+  if(value as num < 0) {
     return Color(0xFF3EB595);
   }
   if(value == 0) {
-    return Color(0xFF7D6B7D);
+    return normal;
   }
   return Color(0xFFFF665A);
 }
+
 
 
 

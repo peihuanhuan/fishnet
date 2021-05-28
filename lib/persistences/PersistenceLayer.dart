@@ -159,9 +159,7 @@ Future<void> main() async {
       DateTime.now());
 
   var jsonEncode2 = jsonEncode(x);
-  print(jsonEncode2);
 
   var jsonDecode2 = jsonDecode(jsonEncode2);
   var variety = Variety.fromJson(jsonDecode2);
-  print('');
 }
