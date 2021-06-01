@@ -111,7 +111,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                     "持有金额",
                     widget._variety
                         .holdingAmount(widget._foundPrice.price)
-                        .outlierDesc(0, "获取净值中")),
+                        .outlierDesc(0, "-")),
                 buildKeyValuePair(
                     "资金年化率", toPercentage(widget._variety.annualizedRate()))
               ]),
@@ -148,8 +148,8 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
 
   Text _buildTotalProfitText() {
     if (widget._foundPrice.price == 0) {
-      return new Text("?",
-        style: TextStyle(color: getFontColor("?"), fontSize: 16),
+      return new Text("-",
+        style: TextStyle(color: getFontColor("-"), fontSize: 16),
       );
     } else {
       var totalProfit = widget._variety.totalProfit(widget._foundPrice.price);
@@ -163,14 +163,14 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
 
   _buildFloatingProfit() {
     if (widget._foundPrice.price == 0) {
-      return "?";
+      return "-";
     }
     return widget._variety.floatingProfit(widget._foundPrice.price);
   }
 
   String _buildPercentage() {
     if (widget._totalMoney == 0) {
-      return "?";
+      return "-";
     }
     var percent = widget._variety.holdingAmount(widget._foundPrice.price) /
         widget._totalMoney;
@@ -179,7 +179,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
 
   String _floatingProfitDetail() {
     if (widget._foundPrice.price == 0) {
-      return "?";
+      return "-";
     }
     return "${widget._foundPrice.price.toStringAsFixed(3)}，更新于${_updateTimeStr()}";
   }

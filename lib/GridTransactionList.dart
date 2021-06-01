@@ -96,41 +96,8 @@ class _GridTransactionListState extends State<GridTransactionList> {
         title: buildTitle(transaction),
         children: <Widget>[
           GestureDetector(
-
-            // onTapUp: (TapUpDetails detail) {
-            //   //获取当前触摸点的全局坐标
-            //   globalPosition=detail.globalPosition;
-            //   print(globalPosition);
-            //   //获取当前触摸点的局部坐标
-            //   var localPosition=detail.localPosition;
-            // },
-            onTapUp: (TapUpDetails detail){
-
-              print(detail.globalPosition);
-              print(detail.globalPosition.dx);
-              showMenu(
-                  context: context,
-                  // position: RelativeRect.fromLTRB(100.0, 200.0, 100.0, 100.0),
-                  position: RelativeRect.fromLTRB(1, top(cardGlobalKey), 0, 0),
-                  items: <PopupMenuItem<String>>[
-                    new PopupMenuItem<String>( value: 'value01', child: new Text('Item One')),
-                    new PopupMenuItem<String>( value: 'value02', child: new Text('Item Two')),
-                  ] );
-
-              // showDialog(
-              //     context: context,
-              //     builder: (context) {
-              //       return _editorDialogBuilder(context, index);
-              //     });
-            },
-            onLongPress: (){
-
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return _deleteDialogBuilder(context, index);
-                  });
-
+            onLongPressStart: (LongPressStartDetails detail) {
+              _showMenu(detail, cardGlobalKey, index);
             },
             child: Padding(
               padding: const EdgeInsets.all(8.0),
@@ -153,15 +120,37 @@ class _GridTransactionListState extends State<GridTransactionList> {
     return card;
   }
 
-  double top(GlobalKey<State<StatefulWidget>> cardGlobalKey) {
+  Future<void> _showMenu(LongPressStartDetails detail,
+      GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
+    // RenderBox renderBox = cardGlobalKey.currentContext.findRenderObject();
+    // var offset = renderBox.localToGlobal(Offset(0.0, renderBox.size.height));
+    // return offset.dy;
 
-    var findRenderObject = (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
-
-    // print(findRenderObject.localToGlobal(Offset.zero));
-    // print(findRenderObject.size);
-
-
-    return findRenderObject.localToGlobal(Offset.zero).dy;
+    var findRenderObject =
+        (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
+    var dy = findRenderObject.localToGlobal(Offset.zero).dy;
+    var item = await showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(
+            detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
+        items: <PopupMenuItem<String>>[
+          new PopupMenuItem<String>(value: 'edit', child: new Text('编辑')),
+          new PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
+        ]);
+    if (item == "edit") {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return _editorDialogBuilder(context, index);
+          });
+    }
+    if (item == "remove") {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return _deleteDialogBuilder(context, index);
+          });
+    }
   }
 
   AlertDialog _editorDialogBuilder(BuildContext context, int index) {
@@ -169,19 +158,23 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
     var buyNumber = transaction.buy.number;
     var buyPrice = transaction.buy.price;
-    var sellNumber = transaction.sell.number;
-    var sellPrice = transaction.sell.price;
+    var sellNumber = transaction.sell?.number;
+    var sellPrice = transaction.sell?.price;
+
+    var columnChildren = [
+          buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
+          buySellTextField("买入价格", buyPrice, (price) => buyPrice = price),
+        ];
+
+    if(transaction.sell != null) {
+      columnChildren.add(buySellNumberTextField("卖出数量", sellNumber, (number) => sellNumber = number));
+      columnChildren.add(buySellTextField("卖出价格", sellPrice, (price) => sellPrice = price));
+    }
 
     return AlertDialog(
       title: Text("修改"),
       content: Column(
-        children: [
-          buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
-          buySellTextField("买入价格", buyPrice, (price) => buyPrice = price),
-
-          buySellNumberTextField("卖出数量", sellNumber, (number) => sellNumber = number),
-          buySellTextField("卖出价格", sellPrice, (price) => sellPrice = price),
-        ],
+        children: columnChildren,
       ),
       actions: <Widget>[
         TextButton(
@@ -202,34 +195,35 @@ class _GridTransactionListState extends State<GridTransactionList> {
     );
   }
 
-  TextField buySellNumberTextField(String title, int number, Function onChange) {
+  TextField buySellNumberTextField(
+      String title, int number, Function onChange) {
     return TextField(
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: "买入数量"),
-          controller: TextEditingController()..text = number.toString(),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(10)
-          ],
-          onChanged: (str) {
-            onChange(int.parse(str));
-          },
-        );
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(labelText: "买入数量"),
+      controller: TextEditingController()..text = number.toString(),
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(10)
+      ],
+      onChanged: (str) {
+        onChange(int.parse(str));
+      },
+    );
   }
 
   TextField buySellTextField(String title, num price, Function onChange) {
     return TextField(
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: title),
-          controller: TextEditingController()..text = price.toString(),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp("[0-9.]")),
-            LengthLimitingTextInputFormatter(10)
-          ],
-          onChanged: (str) {
-            onChange(num.parse(str));
-          },
-        );
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(labelText: title),
+      controller: TextEditingController()..text = price.toString(),
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp("[0-9.]")),
+        LengthLimitingTextInputFormatter(10)
+      ],
+      onChanged: (str) {
+        onChange(num.parse(str));
+      },
+    );
   }
 
   AlertDialog _deleteDialogBuilder(BuildContext context, int index) {
@@ -263,10 +257,10 @@ class _GridTransactionListState extends State<GridTransactionList> {
         buildKeyValuePair("数量", transaction.buy.number),
         div(),
         buildKeyValuePair(
-            "卖出", transaction.sell == null ? 0 : transaction.sell.price,
+            "卖出", transaction.sell == null ? "-" : transaction.sell.price,
             fractionDigits: 3),
         buildKeyValuePair(
-            "数量", transaction.sell == null ? 0 : transaction.sell.number)
+            "数量", transaction.sell == null ? "-" : transaction.sell.number)
       ],
     );
   }
