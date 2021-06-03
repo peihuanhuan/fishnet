@@ -7,8 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-
-import 'PopupMenu.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class GridTransactionList extends StatefulWidget {
   int _varietyId;
@@ -30,6 +29,7 @@ Color c4 = Color(0xFFFBF4E5);
 List<Color> cc = [c1, c2, c3, c4];
 
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
+DateFormat yyyy_MM_ddFormat = DateFormat("yyyy-MM-dd");
 
 class _GridTransactionListState extends State<GridTransactionList> {
   var _transactions = <TwoDirectionTransactions>[];
@@ -158,17 +158,22 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
     var buyNumber = transaction.buy.number;
     var buyPrice = transaction.buy.price;
+    var buyDate = transaction.buy.time;
     var sellNumber = transaction.sell?.number;
     var sellPrice = transaction.sell?.price;
+    var sellDate = transaction.sell?.time;
 
     var columnChildren = [
-          buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
-          buySellTextField("买入价格", buyPrice, (price) => buyPrice = price),
-        ];
+      buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
+      buySellTextField("买入价格", buyPrice, (price) => buyPrice = price),
+      buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
+    ];
 
-    if(transaction.sell != null) {
-      columnChildren.add(buySellNumberTextField("卖出数量", sellNumber, (number) => sellNumber = number));
-      columnChildren.add(buySellTextField("卖出价格", sellPrice, (price) => sellPrice = price));
+    if (transaction.sell != null) {
+      columnChildren.add(buySellNumberTextField(
+          "卖出数量", sellNumber, (number) => sellNumber = number));
+      columnChildren.add(
+          buySellTextField("卖出价格", sellPrice, (price) => sellPrice = price));
     }
 
     return AlertDialog(
@@ -182,11 +187,10 @@ class _GridTransactionListState extends State<GridTransactionList> {
           onPressed: () => Navigator.of(context).pop(), //关闭对话框
         ),
         TextButton(
-          child: Text("删除"),
+          child: Text("确认"),
           onPressed: () {
             setState(() {
               // todo 持久化
-              _transactions.removeAt(index);
             });
             Navigator.of(context).pop(true); //关闭对话框
           },
@@ -195,34 +199,85 @@ class _GridTransactionListState extends State<GridTransactionList> {
     );
   }
 
-  TextField buySellNumberTextField(
-      String title, int number, Function onChange) {
-    return TextField(
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(labelText: "买入数量"),
-      controller: TextEditingController()..text = number.toString(),
-      inputFormatters: <TextInputFormatter>[
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(10)
-      ],
-      onChanged: (str) {
-        onChange(int.parse(str));
-      },
+  Widget buildTimePicker(
+      BuildContext context, String title, DateTime date, Function onChange) {
+    return _textFieldBuilder(
+        title,
+        InkWell(
+
+          onTap: () async {
+            var _result = await showDatePicker(
+              context: context,
+              currentDate: DateTime.now(),
+              initialDate: date,
+              firstDate: DateTime(2015),
+              lastDate: DateTime.now(),
+              locale: Locale('zh'),
+            );
+            if (_result == null) {
+              return;
+            }
+
+            setState(() {
+              date = _result;
+            });
+            setState(() {
+              date = _result;
+              onChange(date);
+              print(date);
+            });
+          },
+          child: Text(yyyy_MM_ddFormat.format(date)),
+        )
     );
+
   }
 
-  TextField buySellTextField(String title, num price, Function onChange) {
-    return TextField(
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(labelText: title),
-      controller: TextEditingController()..text = price.toString(),
-      inputFormatters: <TextInputFormatter>[
-        FilteringTextInputFormatter.allow(RegExp("[0-9.]")),
-        LengthLimitingTextInputFormatter(10)
+  Widget buySellNumberTextField(String title, int number, Function onChange) {
+    return _textFieldBuilder(
+        title,
+        TextField(
+          keyboardType: TextInputType.number,
+          controller: TextEditingController()..text = number.toString(),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10)
+          ],
+          onChanged: (str) {
+            onChange(int.parse(str));
+          },
+        ));
+  }
+
+  Widget buySellTextField(String title, num price, Function onChange) {
+    return _textFieldBuilder(
+        title,
+        TextField(
+          keyboardType: TextInputType.number,
+          controller: TextEditingController()..text = price.toString(),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp("[0-9.]")),
+            LengthLimitingTextInputFormatter(10)
+          ],
+          onChanged: (str) {
+            onChange(num.parse(str));
+          },
+        ));
+  }
+
+  Widget _textFieldBuilder(String title, Widget valueChild) {
+    return Flex(
+      direction: Axis.horizontal,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+          child: Text(
+            title + ":",
+            style: TextStyle(fontSize: 15),
+          ),
+        ),
+        Expanded(child: valueChild)
       ],
-      onChanged: (str) {
-        onChange(num.parse(str));
-      },
     );
   }
 

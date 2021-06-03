@@ -14,7 +14,7 @@ extension ObjectExtension on Object {
   outlierDesc(num value, String desc) {
     var value = this;
     if (value is int || value is num || value is double) {
-      return value == 0 ? desc : value.toString();
+      return value == 0 ? desc : value;
     } else {
       return value;
     }

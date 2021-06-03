@@ -6,6 +6,7 @@ import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'persistences/PersistenceLayer.dart';
 import 'package:flutter/services.dart';
 
@@ -90,6 +91,16 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
           ),
         ),
       ),
+      localizationsDelegates: [
+        //此处 系统是什么语言就显示什么语言
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        //此处 系统是什么语言就显示什么语言
+        const Locale('zh', 'CH'),
+        const Locale('en', 'US'),
+      ],
     );
   }
 
