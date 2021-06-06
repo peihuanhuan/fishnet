@@ -1,5 +1,4 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:fishnet/entity/TwoDirectionTransactions.dart';
 import 'package:fishnet/persistences/PersistenceLayer.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
@@ -8,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'domain/entity/TwoDirectionTransactions.dart';
 
 class GridTransactionList extends StatefulWidget {
   int _varietyId;
@@ -166,7 +167,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var columnChildren = [
       buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
       buySellTextField("买入价格", buyPrice, (price) => buyPrice = price),
-      buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
+      // buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
     ];
 
     if (transaction.sell != null) {
@@ -179,6 +180,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     return AlertDialog(
       title: Text("修改"),
       content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: columnChildren,
       ),
       actions: <Widget>[
@@ -204,7 +206,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
     return _textFieldBuilder(
         title,
         InkWell(
-
           onTap: () async {
             var _result = await showDatePicker(
               context: context,
@@ -272,7 +273,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
           child: Text(
-            title + ":",
+            title + ":\t",
             style: TextStyle(fontSize: 15),
           ),
         ),

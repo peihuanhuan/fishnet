@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fishnet/entity/FoundPrice.dart';
+import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'GridTransactionList.dart';
-import 'entity/Variety.dart';
+import 'domain/entity/Variety.dart';
 
 class StatefulFoundCardItem extends StatefulWidget {
   Variety _variety;

@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:fishnet/entity/FoundPrice.dart';
-import 'package:fishnet/entity/Variety.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'domain/entity/FoundPrice.dart';
+import 'domain/entity/Variety.dart';
 import 'persistences/PersistenceLayer.dart';
 import 'package:flutter/services.dart';
 
@@ -35,18 +35,15 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
       removedItemBuilder: _buildRemovedItem,
     );
     calcTotalAmount();
-
   }
 
   void calcTotalAmount() async {
-
     var foundPrices =
         await queryPrice(_list._items.map((e) => e.code).toList());
 
     foundPrices.forEach((foundPrice) {
       foundPriceMap[foundPrice.code] = foundPrice;
     });
-
 
     totalAmount = 0;
     _list._items.forEach((variety) {
@@ -59,7 +56,6 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
 
   @override
   Widget build(BuildContext context) {
-    print('build _AnimatedListSampleState');
     return new MaterialApp(
       home: new Scaffold(
         appBar: new AppBar(
@@ -78,8 +74,8 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
           ],
         ),
         floatingActionButton:
-            MyFloat("新建网格", "", (code) => _insert(code), (code) {
-          return code.length == 6;
+            MyFloat("新建网格", "", (code) => _insert(code), (_code, _mesh, _firstPrice, _firstNumber) {
+          return _code.toString().length == 6;
         }),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: new Padding(
@@ -257,33 +253,24 @@ class DialogStatefulWidget extends StatefulWidget {
 
 class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   int _loading = 0;
-  String _code;
-  bool disabled = true;
+  num _code;
+  num _mesh;
+  num _firstNumber;
+  num _firstPrice;
+  bool enable = false;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget._dialogTitle),
-      content: TextField(
-        autofocus: true,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: "神秘代码",
-          hintText: widget._hintTitle,
-        ),
-        maxLength: 6,
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(6)
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildNumberTextField("神秘代码", (value) {_code = value; checkClickable();}, maxLength: 6),
+          buildNumberTextField("网格大小", (value){_mesh = value; checkClickable();}),
+          buildNumberTextField("第一网价格", (value){_firstPrice = value; checkClickable();}, allow: RegExp("[0-9.]")),
+          buildNumberTextField("第一网数量", (value){_firstNumber = value; checkClickable();}),
         ],
-        onChanged: (str) {
-          _code = str;
-          if (widget._checkOkButtonEnable(_code)) {
-            setState(() {
-              disabled = false;
-            });
-          }
-        },
       ),
       actions: <Widget>[
         TextButton(
@@ -305,8 +292,47 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
     );
   }
 
+  void checkClickable() {
+    setState(() {
+      enable = widget._checkOkButtonEnable(_code, _mesh, _firstPrice, _firstNumber);
+    });
+  }
+
+  Widget buildNumberTextField(String title, Function onChange,
+      {int maxLength, Pattern allow, int limit = 8}) {
+    return _textFieldBuilder(
+        title,
+        TextField(
+          keyboardType: TextInputType.number,
+          maxLength: maxLength,
+          inputFormatters: <TextInputFormatter>[
+            allow == null ? FilteringTextInputFormatter.digitsOnly : FilteringTextInputFormatter.allow(allow),
+            LengthLimitingTextInputFormatter(limit)
+          ],
+          onChanged: (str) {
+            onChange(num.parse(str));
+          },
+        ));
+  }
+
+  Widget _textFieldBuilder(String title, Widget valueChild) {
+    return Flex(
+      direction: Axis.horizontal,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+          child: Text(
+            title + ":\t",
+            style: TextStyle(fontSize: 15),
+          ),
+        ),
+        Expanded(child: valueChild)
+      ],
+    );
+  }
+
   Function onOkPressed(BuildContext context) {
-    if (disabled) {
+    if (!enable) {
       return null;
     }
     return () async {

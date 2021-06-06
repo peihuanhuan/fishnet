@@ -2,11 +2,12 @@
 
 import 'dart:io';
 
-import 'package:fishnet/entity/Trade.dart';
-import 'package:fishnet/entity/TwoDirectionTransactions.dart';
-import 'package:fishnet/entity/Variety.dart';
 
 import 'dart:convert';
+
+import 'package:fishnet/domain/entity/Trade.dart';
+import 'package:fishnet/domain/entity/TwoDirectionTransactions.dart';
+import 'package:fishnet/domain/entity/Variety.dart';
 
 var defaultVarieties = [
   Variety.fromJson(jsonDecode(yiyao)),

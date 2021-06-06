@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fishnet/entity/FoundPrice.dart';
-import 'package:fishnet/entity/Variety.dart';
+import 'package:fishnet/domain/entity/FoundPrice.dart';
+import 'package:fishnet/domain/entity/Variety.dart';
 
 String toPercentage(num value) => (value * 100).toStringAsFixed(2) + "%";
 
