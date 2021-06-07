@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fishnet/util/CommonUtils.dart';
+import 'package:fishnet/util/PrecisionLimitFormatter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
@@ -73,9 +74,13 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
             ),
           ],
         ),
-        floatingActionButton:
-            MyFloat("新建网格", "", (code) => _insert(code), (_code, _mesh, _firstPrice, _firstNumber) {
-          return _code.toString().length == 6;
+        floatingActionButton: MyFloat("新建网格", "", (code) => _insert(code),
+            (_code, _mesh, _firstPrice, _firstNumber) {
+          return _code.toString().length == 6 &&
+              _firstPrice != null &&
+              _firstPrice > 0 &&
+              _firstNumber != null &&
+              _firstNumber > 100;
         }),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: new Padding(
@@ -258,6 +263,8 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   num _firstNumber;
   num _firstPrice;
   bool enable = false;
+  int dropdownValue = 1;
+
 
   @override
   Widget build(BuildContext context) {
@@ -266,10 +273,35 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          buildNumberTextField("神秘代码", (value) {_code = value; checkClickable();}, maxLength: 6),
-          buildNumberTextField("网格大小", (value){_mesh = value; checkClickable();}),
-          buildNumberTextField("第一网价格", (value){_firstPrice = value; checkClickable();}, allow: RegExp("[0-9.]")),
-          buildNumberTextField("第一网数量", (value){_firstNumber = value; checkClickable();}),
+          buildNumberTextField("神秘代码", (value) {
+            _code = value;
+            checkClickable();
+          }, maxLength: 6),
+          _textFieldBuilder("网格大小", DropdownButton<int>(
+              value: dropdownValue,
+              isExpanded: true,
+              items: [
+                DropdownMenuItem(value: 1, child: Text('北京')),
+                DropdownMenuItem(value: 2, child: Text('天津')),
+                DropdownMenuItem(value: 3, child: Text('河北'))
+              ],
+              onChanged: (value) {
+                setState(() {
+                  dropdownValue = value;
+                });
+              })),
+          buildNumberTextField("网格大小", (value) {
+            _mesh = value;
+            checkClickable();
+          }),
+          buildNumberTextField("第一网价格", (value) {
+            _firstPrice = value;
+            checkClickable();
+          }, isPrice: true),
+          buildNumberTextField("第一网数量", (value) {
+            _firstNumber = value;
+            checkClickable();
+          }),
         ],
       ),
       actions: <Widget>[
@@ -294,23 +326,29 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
 
   void checkClickable() {
     setState(() {
-      enable = widget._checkOkButtonEnable(_code, _mesh, _firstPrice, _firstNumber);
+      enable =
+          widget._checkOkButtonEnable(_code, _mesh, _firstPrice, _firstNumber);
     });
   }
 
   Widget buildNumberTextField(String title, Function onChange,
-      {int maxLength, Pattern allow, int limit = 8}) {
+      {int maxLength, bool isPrice = false, int limit = 8}) {
     return _textFieldBuilder(
         title,
         TextField(
           keyboardType: TextInputType.number,
           maxLength: maxLength,
           inputFormatters: <TextInputFormatter>[
-            allow == null ? FilteringTextInputFormatter.digitsOnly : FilteringTextInputFormatter.allow(allow),
-            LengthLimitingTextInputFormatter(limit)
+            !isPrice
+                ? FilteringTextInputFormatter.digitsOnly
+                : PrecisionLimitFormatter(3),
+            LengthLimitingTextInputFormatter(limit),
+            FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
           ],
           onChanged: (str) {
-            onChange(num.parse(str));
+            if (str.isNotEmpty) {
+              onChange(num.parse(str));
+            }
           },
         ));
   }

@@ -8,7 +8,6 @@ String toPercentage(num value) => (value * 100).toStringAsFixed(2) + "%";
 
 int id() => DateTime.now().millisecondsSinceEpoch;
 
-
 extension ObjectExtension on Object {
 
   outlierDesc(num value, String desc) {
