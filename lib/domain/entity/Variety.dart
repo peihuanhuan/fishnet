@@ -6,20 +6,22 @@ import 'TwoDirectionTransactions.dart';
 class Variety {
   int id;
 
-  // todo tojson
-  num mesh;
-  num firstPrice;
-  int firstNumber;
-
   // 代码
   String code;
 
   // 名字
   String name;
 
+  int mesh;
+  num firstPrice;
+  int firstNumber;
+
   List<TwoDirectionTransactions> transactions = List.empty();
 
   DateTime createTime;
+
+  // 简短的标签，备注
+  String tag;
 
   PriceNumberPair quickOperate(bool buy) {
     var lastOperateTime = DateTime.utc(0);
@@ -65,7 +67,7 @@ class Variety {
     var price = firstPrice * level;
     // todo 这需要确定
     var number = firstNumber * (level - mesh);
-    if(!buy) {
+    if (!buy) {
       price += price * mesh;
     }
     for (var transaction in transactions) {
@@ -88,7 +90,15 @@ class Variety {
       });
     }
 
-    return Variety(json['id'], json['code'], json['name'], transactions,
+    return Variety(
+        json['id'],
+        json['code'],
+        json['name'],
+        json['mesh'],
+        json['firstPrice'],
+        json['firstNumber'],
+        json['tag'],
+        transactions,
         DateTime.fromMillisecondsSinceEpoch(json['createTime']));
   }
 
@@ -102,11 +112,16 @@ class Variety {
       'name': name,
       'code': code,
       'transactions': transactionsJson,
+      'mesh': mesh,
+      'firstNumber': firstNumber,
+      'firstPrice': firstPrice,
+      'tag': tag,
       'createTime': createTime.millisecondsSinceEpoch
     };
   }
 
-  Variety(this.id, this.code, this.name, this.transactions, this.createTime);
+  Variety(this.id, this.code, this.name, this.mesh, this.firstPrice,
+      this.firstNumber,this.tag, this.transactions, this.createTime);
 
   num totalProfit(num currentPrice) {
     return transactions

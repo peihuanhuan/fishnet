@@ -74,7 +74,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
             ),
           ],
         ),
-        floatingActionButton: MyFloat("新建网格", "", (code) => _insert(code),
+        floatingActionButton: MyFloat("新建网格", "", (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
             (_code, _mesh, _firstPrice, _firstNumber) {
           return _code.toString().length == 6 &&
               _firstPrice != null &&
@@ -136,12 +136,13 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   }
 
 // Insert the "next item" into the list model.
-  Future<void> _insert(String code) async {
+  Future<void> _insert(code, mesh, firstPrice, firstNumber, tag) async {
     var name = await queryName(code);
 
     print('插入啦 $code $name');
 
-    var variety = Variety(id(), code, name, List.empty(), DateTime.now());
+    var variety = Variety(id(), code,
+        name, mesh, firstPrice, firstNumber,tag, List.empty(), DateTime.now());
     _list.insert(0, variety);
     setState(() {});
     defaultVarieties.add(variety);
@@ -259,11 +260,11 @@ class DialogStatefulWidget extends StatefulWidget {
 class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   int _loading = 0;
   num _code;
-  num _mesh;
   num _firstNumber;
   num _firstPrice;
   bool enable = false;
-  int dropdownValue = 1;
+  int _mesh = 5;
+  String _tag = "";
 
 
   @override
@@ -278,22 +279,14 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
             checkClickable();
           }, maxLength: 6),
           _textFieldBuilder("网格大小", DropdownButton<int>(
-              value: dropdownValue,
+              value: _mesh,
               isExpanded: true,
-              items: [
-                DropdownMenuItem(value: 1, child: Text('北京')),
-                DropdownMenuItem(value: 2, child: Text('天津')),
-                DropdownMenuItem(value: 3, child: Text('河北'))
-              ],
+              items: items(),
               onChanged: (value) {
                 setState(() {
-                  dropdownValue = value;
+                  _mesh = value;
                 });
               })),
-          buildNumberTextField("网格大小", (value) {
-            _mesh = value;
-            checkClickable();
-          }),
           buildNumberTextField("第一网价格", (value) {
             _firstPrice = value;
             checkClickable();
@@ -302,6 +295,9 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
             _firstNumber = value;
             checkClickable();
           }),
+          buildStringTextField("标签", (value) {
+            _tag = value;
+          }, hintText: "小备注"),
         ],
       ),
       actions: <Widget>[
@@ -324,6 +320,11 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
     );
   }
 
+  List<DropdownMenuItem<int>> items() {
+    var items = [3,5,6,7,8,9,10,12,15,20,30];
+    return items.map((e) => DropdownMenuItem(value: e, child: Text('$e%'))).toList();
+  }
+
   void checkClickable() {
     setState(() {
       enable =
@@ -332,10 +333,11 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   }
 
   Widget buildNumberTextField(String title, Function onChange,
-      {int maxLength, bool isPrice = false, int limit = 8}) {
+      {int maxLength, bool isPrice = false, int limit = 8, hintText}) {
     return _textFieldBuilder(
         title,
         TextField(
+          decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
           keyboardType: TextInputType.number,
           maxLength: maxLength,
           inputFormatters: <TextInputFormatter>[
@@ -353,18 +355,41 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
         ));
   }
 
+
+  Widget buildStringTextField(String title, Function onChange,
+      {int limit = 8, hintText}) {
+    return _textFieldBuilder(
+        title,
+        TextField(
+          decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
+          keyboardType: TextInputType.text,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.singleLineFormatter,
+            LengthLimitingTextInputFormatter(limit),
+          ],
+          onChanged: (str) {
+              onChange(str);
+          },
+        ));
+  }
+
   Widget _textFieldBuilder(String title, Widget valueChild) {
     return Flex(
       direction: Axis.horizontal,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
-          child: Text(
-            title + ":\t",
-            style: TextStyle(fontSize: 15),
+        Expanded(
+          flex: 2,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+            child: Text(
+              title + ":",
+              style: TextStyle(fontSize: 14),
+            ),
           ),
         ),
-        Expanded(child: valueChild)
+        Expanded(
+            flex: 3,
+            child: valueChild)
       ],
     );
   }
@@ -377,7 +402,7 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       setState(() {
         _loading = 1;
       });
-      widget._okFunction(_code);
+      widget._okFunction(_code, _mesh, _firstPrice, _firstNumber, _tag);
       setState(() {
         _loading = 0;
       });

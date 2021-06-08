@@ -71,19 +71,21 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(_left, 10, 8, 6),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          new Text(widget._variety.name,
-                              style: TextStyle(fontSize: 22)),
-                          new Text(widget._variety.code,
-                              style: TextStyle(fontSize: 12, color: color2)),
-                        ],
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        new Text(widget._variety.name,
+                            style: TextStyle(fontSize: 22)),
+                        new Text(widget._variety.code,
+                            style: TextStyle(fontSize: 12, color: color2)),
+                      ],
                     ),
+                  ),
+                  Container(
+                    alignment: Alignment.bottomCenter,
+                    child: new Text(widget._variety.tag??"啊啊  啊啊",
+                        style: TextStyle(fontSize: 12)),
                   ),
                   Flexible(fit: FlexFit.tight, child: SizedBox()),
                   Padding(

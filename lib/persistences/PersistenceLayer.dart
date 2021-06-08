@@ -143,24 +143,24 @@ _getIPAddress() async {
 
 
 
-Future<void> main() async {
-  // final prefs = await SharedPreferences.getInstance();
-  // prefs.setInt('counter', 111);
-  // final counter = prefs.getInt('counter') ?? 0;
-  var x = Variety(
-      1,
-      "159920",
-      "恒生",
-      [
-        TwoDirectionTransactions(
-            1, 1.0, Trade(1, 100, 2000, DateTime.now()), null),
-        TwoDirectionTransactions(1, 0.95, Trade(1, 95, 3000, DateTime.now()),
-            Trade(1, 100, 2000, DateTime.now()))
-      ],
-      DateTime.now());
-
-  var jsonEncode2 = jsonEncode(x);
-
-  var jsonDecode2 = jsonDecode(jsonEncode2);
-  var variety = Variety.fromJson(jsonDecode2);
-}
+// Future<void> main() async {
+//   // final prefs = await SharedPreferences.getInstance();
+//   // prefs.setInt('counter', 111);
+//   // final counter = prefs.getInt('counter') ?? 0;
+//   var x = Variety(
+//       1,
+//       "159920",
+//       "恒生",
+//       [
+//         TwoDirectionTransactions(
+//             1, 1.0, Trade(1, 100, 2000, DateTime.now()), null),
+//         TwoDirectionTransactions(1, 0.95, Trade(1, 95, 3000, DateTime.now()),
+//             Trade(1, 100, 2000, DateTime.now()))
+//       ],
+//       DateTime.now());
+//
+//   var jsonEncode2 = jsonEncode(x);
+//
+//   var jsonDecode2 = jsonDecode(jsonEncode2);
+//   var variety = Variety.fromJson(jsonDecode2);
+// }
