@@ -137,7 +137,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
 
 // Insert the "next item" into the list model.
   Future<void> _insert(code, mesh, firstPrice, firstNumber, tag) async {
-    var name = await queryName(code);
+    var name = await queryName(code.toString());
 
     print('插入啦 $code $name');
 
@@ -328,7 +328,7 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   void checkClickable() {
     setState(() {
       enable =
-          widget._checkOkButtonEnable(_code, _mesh, _firstPrice, _firstNumber);
+          widget._checkOkButtonEnable(_code.toString(), _mesh, _firstPrice, _firstNumber);
     });
   }
 
@@ -402,7 +402,7 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       setState(() {
         _loading = 1;
       });
-      widget._okFunction(_code, _mesh, _firstPrice, _firstNumber, _tag);
+      widget._okFunction(_code.toString(), _mesh, _firstPrice, _firstNumber, _tag);
       setState(() {
         _loading = 0;
       });

@@ -82,10 +82,13 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                       ],
                     ),
                   ),
-                  Container(
-                    alignment: Alignment.bottomCenter,
-                    child: new Text(widget._variety.tag??"啊啊  啊啊",
-                        style: TextStyle(fontSize: 12)),
+                  Expanded(
+                    child: Container(
+                      height: 50,
+                      alignment: Alignment.bottomCenter,
+                      child: new Text(widget._variety.tag??"",
+                          style: TextStyle(fontSize: 12)),
+                    ),
                   ),
                   Flexible(fit: FlexFit.tight, child: SizedBox()),
                   Padding(

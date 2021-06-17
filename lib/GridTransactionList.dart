@@ -5,8 +5,8 @@ import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'domain/entity/TwoDirectionTransactions.dart';
 
@@ -56,22 +56,25 @@ class _GridTransactionListState extends State<GridTransactionList> {
       );
     }
 
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _transactions.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: buildItemCard(index),
-                );
-              },
-            ),
-          )
-        ],
+    return Scaffold(
+      floatingActionButton: MyAddTradeFloat(),
+      body: Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: _transactions.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    child: buildItemCard(index),
+                  );
+                },
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -80,7 +83,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var transaction = _transactions[index];
     var cardGlobalKey = GlobalKey();
 
-    Offset globalPosition;
     Widget card = Card(
       key: cardGlobalKey,
       color: cc[index % 4],
@@ -159,10 +161,8 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
     var buyNumber = transaction.buy.number;
     var buyPrice = transaction.buy.price;
-    var buyDate = transaction.buy.time;
     var sellNumber = transaction.sell?.number;
     var sellPrice = transaction.sell?.price;
-    var sellDate = transaction.sell?.time;
 
     var columnChildren = [
       buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
@@ -372,7 +372,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
       child: Container(
         padding: EdgeInsets.all(8),
         child: AutoSizeText(value.toString(),
-            maxLines: 1, style: TextStyle(color: color, fontSize: 18)),
+            maxLines: 1, style: TextStyle(color: color, fontSize: 14)),
       ),
     );
   }
@@ -381,7 +381,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
       {Color color = color2,
       fractionDigits = 2,
       titleSize = 12.0,
-      valueSize = 14.0}) {
+      valueSize = 13.0}) {
     return Expanded(
       flex: 1,
       child: Align(
@@ -412,4 +412,76 @@ class _GridTransactionListState extends State<GridTransactionList> {
       ),
     );
   }
+}
+
+
+class MyAddTradeFloat extends StatefulWidget {
+  @override
+  _MyAddTradeFloatState createState() => _MyAddTradeFloatState();
+}
+
+class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
+  @override
+  Widget build(BuildContext context) {
+    var textStyle = TextStyle(fontSize: 16);
+    return SpeedDial(
+      marginRight: 25,//右边距
+      marginBottom: 50,//下边距
+      animatedIcon: AnimatedIcons.menu_close,//带动画的按钮
+      animatedIconTheme: IconThemeData(size: 22.0),
+      visible: true,//是否显示按钮
+      closeManually: false,//是否在点击子按钮后关闭展开项
+      curve: Curves.bounceIn,//展开动画曲线
+      overlayColor: Colors.black,//遮罩层颜色
+      overlayOpacity: 0.5,//遮罩层透明度
+      onOpen: () => print('OPENING DIAL'),//展开回调
+      onClose: () => print('DIAL CLOSED'),//关闭回调
+      tooltip: 'Speed Dial',//长按提示文字
+      heroTag: 'speed-dial-hero-tag',//hero标记
+      backgroundColor: Colors.blue,//按钮背景色
+      foregroundColor: Colors.white,//按钮前景色/文字色
+      elevation: 8.0,//阴影
+      shape: CircleBorder(),//shape修饰
+      children: [//子按钮
+        SpeedDialChild(
+            child: Icon(Icons.accessibility),
+            backgroundColor: Colors.red,
+            label: '快速卖出',
+            labelStyle: textStyle,
+            onTap: (){
+              // onButtonClick(1);
+            }
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.brush),
+          backgroundColor: Colors.orange,
+          label: '快速买入',
+          labelStyle: textStyle,
+          onTap: (){
+            // onButtonClick(2);
+          },
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.keyboard_voice),
+          backgroundColor: Colors.green,
+          label: '第三个按钮',
+          labelStyle: textStyle,
+          onTap: (){
+            _showMyDialog(context);
+            // onButtonClick(3);
+          },
+        ),
+      ],
+    );
+
+  }
+
+  Future<void> _showMyDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true, // user must tap button!
+      builder: (BuildContext context) => AlertDialog(title: Text("sss"),),
+    );
+  }
+
 }
