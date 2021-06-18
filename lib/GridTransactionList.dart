@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:fishnet/domain/entity/Variety.dart';
 import 'package:fishnet/persistences/PersistenceLayer.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 
+import 'domain/dto/PriceNumberPair.dart';
 import 'domain/entity/TwoDirectionTransactions.dart';
 
 class GridTransactionList extends StatefulWidget {
@@ -34,47 +36,49 @@ DateFormat yyyy_MM_ddFormat = DateFormat("yyyy-MM-dd");
 
 class _GridTransactionListState extends State<GridTransactionList> {
   var _transactions = <TwoDirectionTransactions>[];
-
+  Variety _variety;
   @override
   void initState() {
-    var variety = getByVarietyId(widget._varietyId);
-    _transactions = variety.transactions;
+    _variety = getByVarietyId(widget._varietyId);
+    _transactions = _variety.transactions;
   }
 
   @override
   Widget build(BuildContext context) {
+
+    var child;
+
     if (_transactions.isEmpty) {
-      return Container(
-        color: Colors.white,
-        child: Center(
+        child =  Center(
           child: Text(
             "还没有数据哦",
             textAlign: TextAlign.center,
             style: TextStyle(color: color1, fontSize: 12),
           ),
-        ),
+        );
+    } else {
+      child = Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _transactions.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: buildItemCard(index),
+                );
+              },
+            ),
+          )
+        ],
       );
     }
 
     return Scaffold(
-      floatingActionButton: MyAddTradeFloat(),
+      floatingActionButton: MyAddTradeFloat(_variety),
       body: Container(
         color: Colors.white,
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: _transactions.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                    child: buildItemCard(index),
-                  );
-                },
-              ),
-            )
-          ],
-        ),
+        child: child,
       ),
     );
   }
@@ -165,16 +169,14 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var sellPrice = transaction.sell?.price;
 
     var columnChildren = [
-      buySellNumberTextField("买入数量", buyNumber, (number) => buyNumber = number),
-      buySellTextField("买入价格", buyPrice, (price) => buyPrice = price),
+      numberFieldInputWidget("买入价格",  (price) => buyPrice = price, defaultValue: buyPrice),
+      numberFieldInputWidget("买入数量",  (number) => buyNumber = number,  isPrice: true, defaultValue: buyNumber),
       // buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
     ];
 
     if (transaction.sell != null) {
-      columnChildren.add(buySellNumberTextField(
-          "卖出数量", sellNumber, (number) => sellNumber = number));
-      columnChildren.add(
-          buySellTextField("卖出价格", sellPrice, (price) => sellPrice = price));
+      columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price, isPrice: true, defaultValue: sellPrice));
+      columnChildren.add(numberFieldInputWidget("卖出数量", (number) => sellNumber = number, defaultValue: sellNumber));
     }
 
     return AlertDialog(
@@ -203,7 +205,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
   Widget buildTimePicker(
       BuildContext context, String title, DateTime date, Function onChange) {
-    return _textFieldBuilder(
+    return customFieldInputWidget(
         title,
         InkWell(
           onTap: () async {
@@ -218,7 +220,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
             if (_result == null) {
               return;
             }
-
             setState(() {
               date = _result;
             });
@@ -229,58 +230,10 @@ class _GridTransactionListState extends State<GridTransactionList> {
             });
           },
           child: Text(yyyy_MM_ddFormat.format(date)),
-        )
-    );
-
-  }
-
-  Widget buySellNumberTextField(String title, int number, Function onChange) {
-    return _textFieldBuilder(
-        title,
-        TextField(
-          keyboardType: TextInputType.number,
-          controller: TextEditingController()..text = number.toString(),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(10)
-          ],
-          onChanged: (str) {
-            onChange(int.parse(str));
-          },
         ));
   }
 
-  Widget buySellTextField(String title, num price, Function onChange) {
-    return _textFieldBuilder(
-        title,
-        TextField(
-          keyboardType: TextInputType.number,
-          controller: TextEditingController()..text = price.toString(),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp("[0-9.]")),
-            LengthLimitingTextInputFormatter(10)
-          ],
-          onChanged: (str) {
-            onChange(num.parse(str));
-          },
-        ));
-  }
 
-  Widget _textFieldBuilder(String title, Widget valueChild) {
-    return Flex(
-      direction: Axis.horizontal,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
-          child: Text(
-            title + ":\t",
-            style: TextStyle(fontSize: 15),
-          ),
-        ),
-        Expanded(child: valueChild)
-      ],
-    );
-  }
 
   AlertDialog _deleteDialogBuilder(BuildContext context, int index) {
     return AlertDialog(
@@ -414,8 +367,12 @@ class _GridTransactionListState extends State<GridTransactionList> {
   }
 }
 
-
 class MyAddTradeFloat extends StatefulWidget {
+
+  Variety _variety;
+
+  MyAddTradeFloat(this._variety);
+
   @override
   _MyAddTradeFloatState createState() => _MyAddTradeFloatState();
 }
@@ -425,63 +382,96 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
   Widget build(BuildContext context) {
     var textStyle = TextStyle(fontSize: 16);
     return SpeedDial(
-      marginRight: 25,//右边距
-      marginBottom: 50,//下边距
-      animatedIcon: AnimatedIcons.menu_close,//带动画的按钮
+      marginRight: 25, //右边距
+      marginBottom: 50, //下边距
+      animatedIcon: AnimatedIcons.menu_close, //带动画的按钮
       animatedIconTheme: IconThemeData(size: 22.0),
-      visible: true,//是否显示按钮
-      closeManually: false,//是否在点击子按钮后关闭展开项
-      curve: Curves.bounceIn,//展开动画曲线
-      overlayColor: Colors.black,//遮罩层颜色
-      overlayOpacity: 0.5,//遮罩层透明度
-      onOpen: () => print('OPENING DIAL'),//展开回调
-      onClose: () => print('DIAL CLOSED'),//关闭回调
-      tooltip: 'Speed Dial',//长按提示文字
-      heroTag: 'speed-dial-hero-tag',//hero标记
-      backgroundColor: Colors.blue,//按钮背景色
-      foregroundColor: Colors.white,//按钮前景色/文字色
-      elevation: 8.0,//阴影
-      shape: CircleBorder(),//shape修饰
-      children: [//子按钮
+      visible: true, //是否显示按钮
+      closeManually: false, //是否在点击子按钮后关闭展开项
+      curve: Curves.bounceIn, //展开动画曲线
+      overlayColor: Colors.black, //遮罩层颜色
+      overlayOpacity: 0.5, //遮罩层透明度
+      onOpen: () => print('OPENING DIAL'), //展开回调
+      onClose: () => print('DIAL CLOSED'), //关闭回调
+      tooltip: 'Speed Dial', //长按提示文字
+      heroTag: 'speed-dial-hero-tag', //hero标记
+      backgroundColor: Colors.blue, //按钮背景色
+      foregroundColor: Colors.white, //按钮前景色/文字色
+      elevation: 8.0, //阴影
+      shape: CircleBorder(), //shape修饰
+      children: [ //子按钮
         SpeedDialChild(
             child: Icon(Icons.accessibility),
             backgroundColor: Colors.red,
             label: '快速卖出',
             labelStyle: textStyle,
-            onTap: (){
-              // onButtonClick(1);
-            }
-        ),
+            onTap: () {
+
+              var quickOperate = widget._variety.quickOperate(false);
+
+              if(quickOperate == null) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("暂时没有可以卖出的了"),
+                ));
+              } else {
+                _showQuickSellDialog(context, quickOperate, (price, number) {
+                  print('卖出 $price $number');
+                });
+              }
+
+            }),
         SpeedDialChild(
           child: Icon(Icons.brush),
           backgroundColor: Colors.orange,
           label: '快速买入',
           labelStyle: textStyle,
-          onTap: (){
-            // onButtonClick(2);
-          },
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.keyboard_voice),
-          backgroundColor: Colors.green,
-          label: '第三个按钮',
-          labelStyle: textStyle,
-          onTap: (){
-            _showMyDialog(context);
-            // onButtonClick(3);
+          onTap: () {
+
+            var quickOperate = widget._variety.quickOperate(true);
+
+            if(quickOperate == null) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("你的网被击穿了！"),
+              ));
+            } else {
+              _showQuickSellDialog(context, quickOperate, (price, number) {
+                print('买入 $price $number');
+              });
+            }
+
           },
         ),
       ],
     );
-
   }
 
-  Future<void> _showMyDialog(BuildContext context) {
+  Future<void> _showQuickSellDialog(BuildContext context, PriceNumberPair priceNumber, Function onOkButton) {
+    num _price;
+    num _number;
     return showDialog(
       context: context,
       barrierDismissible: true, // user must tap button!
-      builder: (BuildContext context) => AlertDialog(title: Text("sss"),),
+      builder: (BuildContext context) {
+        return AlertDialog(
+        title: Text("快速卖出 档位 ${priceNumber.level}"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            numberFieldInputWidget("卖出价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price),
+            numberFieldInputWidget("卖出数量", (num) => {_number = num}, defaultValue: priceNumber.number),
+          ],
+        ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+                child: Text('确认'),
+                onPressed: () => {onOkButton(_price, _number)}),
+          ],
+      );
+      },
     );
   }
-
 }

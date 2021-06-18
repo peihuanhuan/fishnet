@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:fishnet/util/CommonUtils.dart';
-import 'package:fishnet/util/PrecisionLimitFormatter.dart';
+import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
@@ -9,7 +9,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'domain/entity/FoundPrice.dart';
 import 'domain/entity/Variety.dart';
 import 'persistences/PersistenceLayer.dart';
-import 'package:flutter/services.dart';
 
 void main() {
   runApp(new AnimatedListSample());
@@ -263,7 +262,7 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   num _firstNumber;
   num _firstPrice;
   bool enable = false;
-  int _mesh = 5;
+  num _mesh = 0.05;
   String _tag = "";
 
 
@@ -274,28 +273,29 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          buildNumberTextField("神秘代码", (value) {
+          numberFieldInputWidget("神秘代码", (value) {
             _code = value;
             checkClickable();
           }, maxLength: 6),
-          _textFieldBuilder("网格大小", DropdownButton<int>(
-              value: _mesh,
+          customFieldInputWidget("网格大小", DropdownButton<int>(
+              value: (_mesh * 100).toInt(),
               isExpanded: true,
               items: items(),
               onChanged: (value) {
                 setState(() {
-                  _mesh = value;
+                  _mesh = value / 100;
                 });
               })),
-          buildNumberTextField("第一网价格", (value) {
+          numberFieldInputWidget("第一网价格", (value) {
             _firstPrice = value;
             checkClickable();
           }, isPrice: true),
-          buildNumberTextField("第一网数量", (value) {
+
+          numberFieldInputWidget("第一网数量", (value) {
             _firstNumber = value;
             checkClickable();
           }),
-          buildStringTextField("标签", (value) {
+          stringFieldInputWidget("标签", (value) {
             _tag = value;
           }, hintText: "小备注"),
         ],
@@ -321,7 +321,7 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   }
 
   List<DropdownMenuItem<int>> items() {
-    var items = [3,5,6,7,8,9,10,12,15,20,30];
+    var items = [3,4,5,6,7,8,9,10,12,15,20,30];
     return items.map((e) => DropdownMenuItem(value: e, child: Text('$e%'))).toList();
   }
 
@@ -330,68 +330,6 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       enable =
           widget._checkOkButtonEnable(_code.toString(), _mesh, _firstPrice, _firstNumber);
     });
-  }
-
-  Widget buildNumberTextField(String title, Function onChange,
-      {int maxLength, bool isPrice = false, int limit = 8, hintText}) {
-    return _textFieldBuilder(
-        title,
-        TextField(
-          decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
-          keyboardType: TextInputType.number,
-          maxLength: maxLength,
-          inputFormatters: <TextInputFormatter>[
-            !isPrice
-                ? FilteringTextInputFormatter.digitsOnly
-                : PrecisionLimitFormatter(3),
-            LengthLimitingTextInputFormatter(limit),
-            FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
-          ],
-          onChanged: (str) {
-            if (str.isNotEmpty) {
-              onChange(num.parse(str));
-            }
-          },
-        ));
-  }
-
-
-  Widget buildStringTextField(String title, Function onChange,
-      {int limit = 8, hintText}) {
-    return _textFieldBuilder(
-        title,
-        TextField(
-          decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
-          keyboardType: TextInputType.text,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.singleLineFormatter,
-            LengthLimitingTextInputFormatter(limit),
-          ],
-          onChanged: (str) {
-              onChange(str);
-          },
-        ));
-  }
-
-  Widget _textFieldBuilder(String title, Widget valueChild) {
-    return Flex(
-      direction: Axis.horizontal,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
-            child: Text(
-              title + ":",
-              style: TextStyle(fontSize: 14),
-            ),
-          ),
-        ),
-        Expanded(
-            flex: 3,
-            child: valueChild)
-      ],
-    );
   }
 
   Function onOkPressed(BuildContext context) {

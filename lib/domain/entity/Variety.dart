@@ -12,7 +12,7 @@ class Variety {
   // 名字
   String name;
 
-  int mesh;
+  num mesh;
   num firstPrice;
   int firstNumber;
 
@@ -26,6 +26,14 @@ class Variety {
   PriceNumberPair quickOperate(bool buy) {
     var lastOperateTime = DateTime.utc(0);
     TwoDirectionTransactions lastTransaction;
+
+    if (transactions.isEmpty) {
+      if (buy) {
+        return PriceNumberPair(1, firstPrice, firstNumber);
+      } else {
+        return null;
+      }
+    }
     for (var transaction in transactions) {
       if (transaction.buy.time.isAfter(lastOperateTime)) {
         lastOperateTime = transaction.buy.time;
@@ -37,7 +45,11 @@ class Variety {
         lastTransaction = transaction;
       }
       if (lastTransaction == null) {
-        return null;
+        if (buy) {
+          return PriceNumberPair(1, firstPrice, firstNumber);
+        } else {
+          return null;
+        }
       }
 
       if (buy) {
@@ -46,7 +58,7 @@ class Variety {
           return findPrice(lastTransaction.level - mesh, buy);
         } else {
           // 买这个档位的 价钱
-          return findPrice(lastTransaction.buy.price, buy);
+          return findPrice(lastTransaction.level, buy);
         }
       }
 
@@ -55,8 +67,17 @@ class Variety {
           // 卖这个 档位的价钱
           return findPrice(lastTransaction.level, buy);
         } else {
-          // 上个档位的 卖点
-          return findPrice(lastTransaction.level + mesh, buy);
+          // 寻找是否有可以卖的
+          transactions.sort((a, b) =>
+              b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
+          for (var transaction in transactions) {
+            if (transaction.level == lastTransaction.level + mesh &&
+                transaction.sell == null) {
+              return PriceNumberPair(lastTransaction.level + mesh,
+                  transaction.sell.price, transaction.sell.number);
+            }
+          }
+          return null;
         }
       }
     }
@@ -78,7 +99,7 @@ class Variety {
         number = trade.number;
       }
     }
-    return PriceNumberPair(price, number);
+    return PriceNumberPair(level, price, number);
   }
 
   factory Variety.fromJson(Map<String, dynamic> json) {
@@ -121,7 +142,7 @@ class Variety {
   }
 
   Variety(this.id, this.code, this.name, this.mesh, this.firstPrice,
-      this.firstNumber,this.tag, this.transactions, this.createTime);
+      this.firstNumber, this.tag, this.transactions, this.createTime);
 
   num totalProfit(num currentPrice) {
     return transactions

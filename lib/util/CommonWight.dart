@@ -3,6 +3,9 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'PrecisionLimitFormatter.dart';
 
 
 const double _left = 22;
@@ -41,6 +44,75 @@ Expanded buildKeyValuePair(String title, Object value, {Color color = color2, ti
         ),
       ),
     ),
+  );
+}
+
+Widget numberFieldInputWidget(String title, Function onChange,
+    {int maxLength, bool isPrice = false, int limit = 8, hintText, num defaultValue}) {
+
+  if(defaultValue != null) {
+    onChange(defaultValue);
+  }
+  return customFieldInputWidget(
+      title,
+      TextField(
+        decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
+        controller: defaultValue == null ? null : (TextEditingController()..text = defaultValue.toString()),
+        keyboardType: TextInputType.number,
+        maxLength: maxLength,
+        inputFormatters: <TextInputFormatter>[
+          !isPrice
+              ? FilteringTextInputFormatter.digitsOnly
+              : PrecisionLimitFormatter(3),
+          LengthLimitingTextInputFormatter(limit),
+          FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
+        ],
+        onChanged: (str) {
+          if (str.isNotEmpty) {
+            onChange(num.parse(str));
+          }
+        },
+      ));
+}
+
+Widget stringFieldInputWidget(String title, Function onChange,
+    {int limit = 8, hintText, defaultValue = ""}) {
+  return customFieldInputWidget(
+      title,
+      TextField(
+        decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
+        keyboardType: TextInputType.text,
+        controller: TextEditingController()..text = defaultValue.toString(),
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.singleLineFormatter,
+          LengthLimitingTextInputFormatter(limit),
+        ],
+        onChanged: (str) {
+          onChange(str);
+        },
+      ));
+}
+
+
+
+Widget customFieldInputWidget(String title, Widget valueChild) {
+  return Flex(
+    direction: Axis.horizontal,
+    children: [
+      Expanded(
+        flex: 2,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+          child: Text(
+            title + ":",
+            style: TextStyle(fontSize: 14),
+          ),
+        ),
+      ),
+      Expanded(
+          flex: 4,
+          child: valueChild)
+    ],
   );
 }
 

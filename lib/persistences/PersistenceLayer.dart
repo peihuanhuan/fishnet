@@ -20,6 +20,9 @@ var yiyao = """
   "id": 1,
   "name": "医药",
   "code": "159938",
+  "mesh": 0.05,
+  "firstPrice": 1,
+  "firstNumber": 10000,
   "transactions": [
     {
       "id": 1,
@@ -63,6 +66,9 @@ var chuanmei = """
   "id": 3,
   "name": "传媒",
   "code": "512980",
+  "mesh": 0.05,
+  "firstPrice": 1,
+  "firstNumber": 10000,
   "transactions": [
     {
       "id": 1,
@@ -87,6 +93,9 @@ var zhenquan = """
   "id": 2,
   "name": "证券",
   "code": "512880",
+  "mesh": 0.05,
+  "firstPrice": 1,
+  "firstNumber": 10000,
   "transactions": [
     {
       "id": 1,
