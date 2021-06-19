@@ -43,6 +43,11 @@ class TwoDirectionTransactions {
 
   // 虚盈
   num floatingProfit(num currentPrice) {
+
+    if(currentPrice == 0) {
+      // 未获取到
+      return 0;
+    }
     return (currentPrice - buy.price) * retainedNumber();
   }
 

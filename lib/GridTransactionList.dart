@@ -1,11 +1,11 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:fishnet/domain/entity/Trade.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
 import 'package:fishnet/persistences/PersistenceLayer.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 
@@ -43,11 +43,17 @@ class _GridTransactionListState extends State<GridTransactionList> {
     _transactions = _variety.transactions;
   }
 
+  void updateParentState() {
+    setState(() {
+      _variety = getByVarietyId(widget._varietyId);
+      _transactions = _variety.transactions;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
-
     var child;
-
     if (_transactions.isEmpty) {
         child =  Center(
           child: Text(
@@ -75,7 +81,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     }
 
     return Scaffold(
-      floatingActionButton: MyAddTradeFloat(_variety),
+      floatingActionButton: MyAddTradeFloat(_variety, updateParentState),
       body: Container(
         color: Colors.white,
         child: child,
@@ -86,7 +92,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
   Widget buildItemCard(int index) {
     var transaction = _transactions[index];
     var cardGlobalKey = GlobalKey();
-
     Widget card = Card(
       key: cardGlobalKey,
       color: cc[index % 4],
@@ -279,35 +284,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
         width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
   }
 
-  Expanded buildExpanded(int flex, String title, num price, int count,
-      {Color color = color2}) {
-    return Expanded(
-      flex: flex,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                title,
-                style: TextStyle(color: color1, fontSize: 8),
-                textAlign: TextAlign.left,
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
-                child: new Text("$price * $count = ￥${price * count}",
-                    style: TextStyle(color: color, fontSize: 15)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget buildLeading(Object value, {Color color = color2}) {
     return DecoratedBox(
@@ -370,8 +346,9 @@ class _GridTransactionListState extends State<GridTransactionList> {
 class MyAddTradeFloat extends StatefulWidget {
 
   Variety _variety;
+  Function updateParentState;
 
-  MyAddTradeFloat(this._variety);
+  MyAddTradeFloat(this._variety, this.updateParentState);
 
   @override
   _MyAddTradeFloatState createState() => _MyAddTradeFloatState();
@@ -414,8 +391,19 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                   content: Text("暂时没有可以卖出的了"),
                 ));
               } else {
-                _showQuickSellDialog(context, quickOperate, (price, number) {
-                  print('卖出 $price $number');
+                _showQuickSellDialog(context, quickOperate, false, (price, number) {
+                  Trade sell = Trade(id(), price, number, DateTime.now());
+
+                  var ts = [];
+                  ts.addAll(widget._variety.transactions);
+                  ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
+                  for (var transaction in ts) {
+                    if (transaction.level == quickOperate.level && transaction.sell == null) {
+                      transaction.sell = sell;
+                    }
+                  }
+                  saveVariety(widget._variety);
+                  widget.updateParentState();
                 });
               }
 
@@ -431,11 +419,16 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
 
             if(quickOperate == null) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text("你的网被击穿了！"),
+                content: Text("你的网已经被击穿！"),
               ));
             } else {
-              _showQuickSellDialog(context, quickOperate, (price, number) {
-                print('买入 $price $number');
+              _showQuickSellDialog(context, quickOperate, true, (price, number) {
+                Trade buy = Trade(id(), price, number, DateTime.now());
+                var twoDirectionTransactions = TwoDirectionTransactions(id(), quickOperate.level, buy, null);
+                widget._variety.transactions.add(twoDirectionTransactions);
+                // todo 持久化
+                saveVariety(widget._variety);
+                widget.updateParentState();
               });
             }
 
@@ -445,20 +438,21 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
     );
   }
 
-  Future<void> _showQuickSellDialog(BuildContext context, PriceNumberPair priceNumber, Function onOkButton) {
+  Future<void> _showQuickSellDialog(BuildContext context, PriceNumberPair priceNumber, bool buy, Function onOkButton) {
     num _price;
     num _number;
+    var title = buy ? "买入" : "卖出";
     return showDialog(
       context: context,
       barrierDismissible: true, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-        title: Text("快速卖出 档位 ${priceNumber.level}"),
+        title: Text("快速$title 档位 ${priceNumber.level}"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            numberFieldInputWidget("卖出价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price),
-            numberFieldInputWidget("卖出数量", (num) => {_number = num}, defaultValue: priceNumber.number),
+            numberFieldInputWidget("$title价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price),
+            numberFieldInputWidget("$title数量", (num) => {_number = num}, defaultValue: priceNumber.number),
           ],
         ),
           actions: <Widget>[
@@ -468,7 +462,11 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
             ),
             TextButton(
                 child: Text('确认'),
-                onPressed: () => {onOkButton(_price, _number)}),
+                onPressed: () {
+                  onOkButton(_price, _number);
+                  Navigator.of(context).pop();
+                }
+            ),
           ],
       );
       },

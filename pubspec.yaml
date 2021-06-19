@@ -23,6 +23,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  decimal: ^0.3.0
   flutter_speed_dial: ^1.2.4
   shared_preferences:
   flutter_localizations:

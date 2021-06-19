@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:fishnet/domain/dto/PriceNumberPair.dart';
 
 import 'Trade.dart';
@@ -16,7 +17,7 @@ class Variety {
   num firstPrice;
   int firstNumber;
 
-  List<TwoDirectionTransactions> transactions = List.empty();
+  List<TwoDirectionTransactions> transactions = [];
 
   DateTime createTime;
 
@@ -44,59 +45,71 @@ class Variety {
         lastOperateTime = transaction.sell.time;
         lastTransaction = transaction;
       }
-      if (lastTransaction == null) {
-        if (buy) {
-          return PriceNumberPair(1, firstPrice, firstNumber);
-        } else {
-          return null;
-        }
-      }
+    }
 
+    if (lastTransaction == null) {
       if (buy) {
-        if (lastTransaction.sell == null) {
-          // 下个档位的 买点
-          return findPrice(lastTransaction.level - mesh, buy);
-        } else {
-          // 买这个档位的 价钱
-          return findPrice(lastTransaction.level, buy);
-        }
+        return PriceNumberPair(1, firstPrice, firstNumber);
+      } else {
+        return null;
       }
+    }
 
-      if (!buy) {
-        if (lastTransaction.sell == null) {
-          // 卖这个 档位的价钱
-          return findPrice(lastTransaction.level, buy);
-        } else {
-          // 寻找是否有可以卖的
-          transactions.sort((a, b) =>
-              b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
-          for (var transaction in transactions) {
-            if (transaction.level == lastTransaction.level + mesh &&
-                transaction.sell == null) {
-              return PriceNumberPair(lastTransaction.level + mesh,
-                  transaction.sell.price, transaction.sell.number);
-            }
-          }
+    if (buy) {
+      if (lastTransaction.sell == null) {
+        // 下个档位的 买点
+        var nextLevel = num.parse((Decimal.parse(lastTransaction.level.toString()) - Decimal.parse(mesh.toString())).toString());
+        if(nextLevel <= 0) {
           return null;
         }
+        return calcPrice(nextLevel, buy);
+      } else {
+        // 买这个档位的 价钱
+        return calcPrice(lastTransaction.level, buy);
+      }
+    }
+
+    if (!buy) {
+      if (lastTransaction.sell == null) {
+        // 卖这个 档位的价钱
+        return calcPrice(lastTransaction.level, buy);
+      } else {
+        var lastLevel = num.parse((Decimal.parse(lastTransaction.level.toString()) + Decimal.parse(mesh.toString())).toString());
+
+        // 寻找是否有可以卖的
+        var ts = [];
+        ts.addAll(transactions);
+
+        ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
+        for (var transaction in ts) {
+          if (transaction.level == lastLevel && transaction.sell == null) {
+            return calcPrice(lastLevel, buy);
+          }
+        }
+        return null;
       }
     }
   }
 
-  PriceNumberPair findPrice(num level, bool buy) {
+  PriceNumberPair calcPrice(num level, bool buy) {
     var lastOperateTime = DateTime.utc(0);
-    var price = firstPrice * level;
-    // todo 这需要确定
-    var number = firstNumber * (level - mesh);
-    if (!buy) {
-      price += price * mesh;
+    num price;
+    int number;
+    if(buy) {
+      price = num.parse((firstPrice * level).toStringAsFixed(3));
+      number =  ((1 / level * firstNumber / 100).ceil() * 100).toInt();
+    } else {
+      // 买的价格要多网格的网眼
+      price = num.parse((firstPrice * (level + mesh)).toStringAsFixed(3));
+      // 留存一倍利润  todo fix 不对算法
+      number = ((firstNumber / (level + mesh) / 100).floor() * 100).toInt();
     }
     for (var transaction in transactions) {
       Trade trade = buy ? transaction.buy : transaction.sell;
-      if (trade.time.isAfter(lastOperateTime)) {
+      if (trade != null && trade.time.isAfter(lastOperateTime) && level == transaction.level) {
         lastOperateTime = trade.time;
         price = trade.price;
-        number = trade.number;
+        number = ((trade.number / 100).ceil() * 100).toInt();
       }
     }
     return PriceNumberPair(level, price, number);

@@ -1,13 +1,10 @@
 // import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dart:io';
-
 
 import 'dart:convert';
 
-import 'package:fishnet/domain/entity/Trade.dart';
-import 'package:fishnet/domain/entity/TwoDirectionTransactions.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 var defaultVarieties = [
   Variety.fromJson(jsonDecode(yiyao)),
@@ -21,8 +18,8 @@ var yiyao = """
   "name": "医药",
   "code": "159938",
   "mesh": 0.05,
-  "firstPrice": 1,
-  "firstNumber": 10000,
+  "firstPrice": 1.900,
+  "firstNumber": 2600,
   "transactions": [
     {
       "id": 1,
@@ -67,8 +64,8 @@ var chuanmei = """
   "name": "传媒",
   "code": "512980",
   "mesh": 0.05,
-  "firstPrice": 1,
-  "firstNumber": 10000,
+  "firstPrice": 0.860,
+  "firstNumber": 5900,
   "transactions": [
     {
       "id": 1,
@@ -94,8 +91,8 @@ var zhenquan = """
   "name": "证券",
   "code": "512880",
   "mesh": 0.05,
-  "firstPrice": 1,
-  "firstNumber": 10000,
+  "firstPrice": 1.030,
+  "firstNumber": 4800,
   "transactions": [
     {
       "id": 1,
@@ -124,52 +121,39 @@ Variety getByVarietyId(int id) {
 }
 
 
-_getIPAddress() async {
-  var url = 'https://httpbin.org/ip';
-  var httpClient = new HttpClient();
-
-  String result;
-  try {
-    var request = await httpClient.getUrl(Uri.parse(url));
-    var response = await request.close();
-    if (response.statusCode == HttpStatus.OK) {
-      var json = await response.transform(utf8.decoder).join();
-      var data = jsonDecode(json);
-      result = data['origin'];
-    } else {
-      result =
-      'Error getting IP address:\nHttp status ${response.statusCode}';
-    }
-  } catch (exception) {
-    result = 'Failed getting IP address';
-  }
-
-  // If the widget was removed from the tree while the message was in flight,
-  // we want to discard the reply rather than calling setState to update our
-  // non-existent appearance.
+Future<void> getVarieties() async {
+  final prefs = await SharedPreferences.getInstance();
+  var stringList = prefs.getStringList('varieties');
+  List<Variety> varieties = [];
+  stringList.forEach((str) {
+    varieties.add(Variety.fromJson(jsonDecode(str)));
+  });
+  return varieties;
 }
 
 
+Future<void> saveVariety(Variety needUpdateVariety) async {
+  final prefs = await SharedPreferences.getInstance();
+  List<String> stringList = prefs.getStringList('varieties') ?? [];
 
 
-// Future<void> main() async {
-//   // final prefs = await SharedPreferences.getInstance();
-//   // prefs.setInt('counter', 111);
-//   // final counter = prefs.getInt('counter') ?? 0;
-//   var x = Variety(
-//       1,
-//       "159920",
-//       "恒生",
-//       [
-//         TwoDirectionTransactions(
-//             1, 1.0, Trade(1, 100, 2000, DateTime.now()), null),
-//         TwoDirectionTransactions(1, 0.95, Trade(1, 95, 3000, DateTime.now()),
-//             Trade(1, 100, 2000, DateTime.now()))
-//       ],
-//       DateTime.now());
-//
-//   var jsonEncode2 = jsonEncode(x);
-//
-//   var jsonDecode2 = jsonDecode(jsonEncode2);
-//   var variety = Variety.fromJson(jsonDecode2);
-// }
+  List<Variety> varieties = [];
+  stringList.forEach((str) {
+    print("存储的  $str");
+    varieties.add(Variety.fromJson(jsonDecode(str)));
+  });
+
+  List<Variety> newVarieties = [];
+  varieties.forEach((element) {
+    if(element.id != needUpdateVariety.id) {
+      newVarieties.add(element);
+    }
+  });
+
+  newVarieties.add(needUpdateVariety);
+
+  var list = newVarieties.map((e) => json.encoder.convert(e)).toList();
+  prefs.setStringList('varieties', list);
+}
+
+

@@ -141,7 +141,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
     print('插入啦 $code $name');
 
     var variety = Variety(id(), code,
-        name, mesh, firstPrice, firstNumber,tag, List.empty(), DateTime.now());
+        name, mesh, firstPrice, firstNumber,tag, [], DateTime.now());
     _list.insert(0, variety);
     setState(() {});
     defaultVarieties.add(variety);
