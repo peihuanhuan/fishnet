@@ -26,10 +26,7 @@ class GridTransactionList extends StatefulWidget {
 
 Color c1 = Color(0xFFFEF1FA);
 Color c2 = Color(0xFFEBF6FF);
-Color c3 = Color(0xFFFAF2FE);
-Color c4 = Color(0xFFFBF4E5);
 
-List<Color> cc = [c1, c2, c3, c4];
 
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
 DateFormat yyyy_MM_ddFormat = DateFormat("yyyy-MM-dd");
@@ -39,14 +36,14 @@ class _GridTransactionListState extends State<GridTransactionList> {
   Variety _variety;
   @override
   void initState() {
-    _variety = getByVarietyId(widget._varietyId);
-    _transactions = _variety.transactions;
+    updateParentState();
   }
 
-  void updateParentState() {
+
+  Future<void> updateParentState() async {
+    _variety = await getByVarietyId(widget._varietyId);
+    _transactions = _variety.transactions;
     setState(() {
-      _variety = getByVarietyId(widget._varietyId);
-      _transactions = _variety.transactions;
     });
   }
 
@@ -94,7 +91,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var cardGlobalKey = GlobalKey();
     Widget card = Card(
       key: cardGlobalKey,
-      color: cc[index % 4],
+      color: transaction.sell == null ? c2 : c1,
       child: ExpansionTile(
         tilePadding: EdgeInsets.fromLTRB(0, 0, 8, 0),
         childrenPadding: EdgeInsets.all(0),
@@ -426,7 +423,6 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                 Trade buy = Trade(id(), price, number, DateTime.now());
                 var twoDirectionTransactions = TwoDirectionTransactions(id(), quickOperate.level, buy, null);
                 widget._variety.transactions.add(twoDirectionTransactions);
-                // todo 持久化
                 saveVariety(widget._variety);
                 widget.updateParentState();
               });

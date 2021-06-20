@@ -112,8 +112,9 @@ var zhenquan = """
 
 """;
 
-Variety getByVarietyId(int id) {
-  for (var value in defaultVarieties) {
+Future<Variety> getByVarietyId(int id) async {
+  var varieties = await getVarieties();
+  for (var value in varieties) {
     if(value.id == id) {
       return value;
     }
@@ -121,9 +122,9 @@ Variety getByVarietyId(int id) {
 }
 
 
-Future<void> getVarieties() async {
+Future<List<Variety>> getVarieties() async {
   final prefs = await SharedPreferences.getInstance();
-  var stringList = prefs.getStringList('varieties');
+  var stringList = prefs.getStringList('varieties') ?? [];
   List<Variety> varieties = [];
   stringList.forEach((str) {
     varieties.add(Variety.fromJson(jsonDecode(str)));
@@ -136,10 +137,8 @@ Future<void> saveVariety(Variety needUpdateVariety) async {
   final prefs = await SharedPreferences.getInstance();
   List<String> stringList = prefs.getStringList('varieties') ?? [];
 
-
   List<Variety> varieties = [];
   stringList.forEach((str) {
-    print("存储的  $str");
     varieties.add(Variety.fromJson(jsonDecode(str)));
   });
 

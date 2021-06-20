@@ -29,11 +29,25 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
 
   @override
   void initState() {
+    init();
+  }
+
+  Future init() async {
     _list = new ListModel<Variety>(
       listKey: _listKey,
-      initialItems: defaultVarieties,
+      initialItems: [],
       removedItemBuilder: _buildRemovedItem,
     );
+
+    var initialItems = await getVarieties();
+    _list = new ListModel<Variety>(
+      listKey: _listKey,
+      initialItems: initialItems,
+      removedItemBuilder: _buildRemovedItem,
+    );
+    setState(() {
+
+    });
     calcTotalAmount();
   }
 
@@ -58,21 +72,6 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   Widget build(BuildContext context) {
     return new MaterialApp(
       home: new Scaffold(
-        appBar: new AppBar(
-          title: const Text('AnimatedList'),
-          actions: <Widget>[
-            new IconButton(
-              icon: const Icon(Icons.add_circle),
-              // onPressed: _insert,
-              tooltip: 'insert a new item',
-            ),
-            new IconButton(
-              icon: const Icon(Icons.remove_circle),
-              // onPressed: _remove,
-              tooltip: 'remove the selected item',
-            ),
-          ],
-        ),
         floatingActionButton: MyFloat("新建网格", "", (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
             (_code, _mesh, _firstPrice, _firstNumber) {
           return _code.toString().length == 6 &&
@@ -143,8 +142,8 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
     var variety = Variety(id(), code,
         name, mesh, firstPrice, firstNumber,tag, [], DateTime.now());
     _list.insert(0, variety);
+    saveVariety(variety);
     setState(() {});
-    defaultVarieties.add(variety);
   }
 
   void _remove(Variety variety) {

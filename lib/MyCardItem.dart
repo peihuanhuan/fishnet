@@ -85,7 +85,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                   Expanded(
                     child: Container(
                       height: 50,
-                      alignment: Alignment.bottomCenter,
+                      alignment: Alignment.bottomLeft,
                       child: new Text(widget._variety.tag??"",
                           style: TextStyle(fontSize: 12)),
                     ),
