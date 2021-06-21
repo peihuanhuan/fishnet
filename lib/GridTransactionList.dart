@@ -171,13 +171,13 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var sellPrice = transaction.sell?.price;
 
     var columnChildren = [
-      numberFieldInputWidget("买入价格",  (price) => buyPrice = price, defaultValue: buyPrice),
+      numberFieldInputWidget("买入价格",  (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
       numberFieldInputWidget("买入数量",  (number) => buyNumber = number,  isPrice: true, defaultValue: buyNumber),
       // buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
     ];
 
     if (transaction.sell != null) {
-      columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price, isPrice: true, defaultValue: sellPrice));
+      columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price, isPrice: true, defaultValue: sellPrice, limit: 7));
       columnChildren.add(numberFieldInputWidget("卖出数量", (number) => sellNumber = number, defaultValue: sellNumber));
     }
 
@@ -447,7 +447,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            numberFieldInputWidget("$title价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price),
+            numberFieldInputWidget("$title价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price, limit: 7),
             numberFieldInputWidget("$title数量", (num) => {_number = num}, defaultValue: priceNumber.number),
           ],
         ),

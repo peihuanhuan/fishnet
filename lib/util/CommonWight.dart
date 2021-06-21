@@ -20,7 +20,7 @@ const Color color1 = Color(0xFFA3A1A8);
 
 
 
-Expanded buildKeyValuePair(String title, Object value, {Color color = color2, titleSize = 12.0, valueSize = 24.0}) {
+Expanded buildKeyValuePair(String title, Object value, {Color titleColor = color1, Color valueColor = color2, titleSize = 12.0, valueSize = 22.0}) {
   return Expanded(
     flex: 1,
     child: Align(
@@ -31,13 +31,13 @@ Expanded buildKeyValuePair(String title, Object value, {Color color = color2, ti
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(title, style: TextStyle(color: color1, fontSize: titleSize), textAlign: TextAlign.left,),
+              child: Text(title, style: TextStyle(color: titleColor, fontSize: titleSize), textAlign: TextAlign.left,),
             ),
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
-                child: new Text(value.objToString(), style: TextStyle(color: color, fontSize: valueSize)),
+                child: new Text(value.objToString(), style: TextStyle(color: valueColor, fontSize: valueSize)),
               ),
             ),
           ],

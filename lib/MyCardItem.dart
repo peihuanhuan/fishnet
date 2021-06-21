@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fishnet/colors/CardColor.dart';
+import 'package:fishnet/colors/CardColorImpl1.dart';
 import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
@@ -8,7 +10,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'GridTransactionList.dart';
+import 'colors/CardColorImpl2.dart';
 import 'domain/entity/Variety.dart';
+
+CardColor cardColor = CardColorImpl1();
 
 class StatefulFoundCardItem extends StatefulWidget {
   Variety _variety;
@@ -18,12 +23,10 @@ class StatefulFoundCardItem extends StatefulWidget {
   Key key;
   VoidCallback _onLongPress;
 
-  StatefulFoundCardItem(this._variety, this._totalMoney, this._foundPrice,
-      this.key, this._onLongPress)
+  StatefulFoundCardItem(this._variety, this._totalMoney, this._foundPrice, this.key, this._onLongPress)
       : super(key: key) {
     if (_foundPrice == null) {
-      _foundPrice = FoundPrice(
-          _variety.code, 0, DateTime.now().add(Duration(minutes: -60)));
+      _foundPrice = FoundPrice(_variety.code, 0, DateTime.now().add(Duration(minutes: -60)));
     }
   }
 
@@ -36,35 +39,21 @@ class StatefulFoundCardItem extends StatefulWidget {
 class _FoundCardItem extends State<StatefulFoundCardItem> {
   static const double _left = 22;
 
-  // var foundPrice = FoundPrice(0, DateTime.now().add(Duration(minutes: -60)));
-
-  @override
-  void initState() {
-    // checkUpdateFoundPrice(widget._variety.code);
-  }
-
-  // checkUpdateFoundPrice(String code, {Function() f}) async {
-  //   if (foundPrice == null ||
-  //       foundPrice.lastQueryTime.difference(DateTime.now()).inMinutes.abs() >
-  //           3) {
-  //     foundPrice = await queryPrice(code);
-  //     // todo 这里会报警
-  //     setState(() {});
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return GridTransactionList(
-              widget._variety.id, widget._foundPrice.price);
+          return GridTransactionList(widget._variety.id, widget._foundPrice.price);
         }));
       },
       onLongPress: widget._onLongPress,
       child: Card(
-          color: Colors.white,
+          color:
+              widget._variety.totalProfit(widget._foundPrice.price) > 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(24.0)),
+          ),
           child: Column(
             children: [
               Row(
@@ -75,10 +64,8 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        new Text(widget._variety.name,
-                            style: TextStyle(fontSize: 22)),
-                        new Text(widget._variety.code,
-                            style: TextStyle(fontSize: 12, color: color2)),
+                        new Text(widget._variety.name, style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: cardColor.highEmphasisColor)),
+                        new Text(widget._variety.code, style: TextStyle(fontSize: 12, color: cardColor.mediumEmphasisColor)),
                       ],
                     ),
                   ),
@@ -86,8 +73,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                     child: Container(
                       height: 50,
                       alignment: Alignment.bottomLeft,
-                      child: new Text(widget._variety.tag??"",
-                          style: TextStyle(fontSize: 12)),
+                      child: new Text(widget._variety.tag ?? "", style: TextStyle(fontSize: 12, color: cardColor.mediumEmphasisColor)),
                     ),
                   ),
                   Flexible(fit: FlexFit.tight, child: SizedBox()),
@@ -97,13 +83,11 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
-                          child: new Text('占比',
-                              style: TextStyle(color: color1, fontSize: 10)),
+                          child: new Text('占比', style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 10)),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(2.0),
-                          child: new Text(_buildPercentage(),
-                              style: TextStyle(color: color2, fontSize: 18)),
+                          child: new Text(_buildPercentage(), style: TextStyle(color: cardColor.highEmphasisColor, fontSize: 18)),
                         ),
                       ],
                     ),
@@ -112,23 +96,18 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
               ),
               buildDivider(),
               buildFlex([
-                buildKeyValuePair(
-                    "持有金额",
-                    widget._variety
-                        .holdingAmount(widget._foundPrice.price)
-                        .outlierDesc(0, "-")),
-                buildKeyValuePair(
-                    "资金年化率", toPercentage(widget._variety.annualizedRate()))
+                buildKeyValuePair("持有金额", widget._variety.holdingAmount(widget._foundPrice.price).outlierDesc(0, "-"),
+                    titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                buildKeyValuePair("资金年化率", toPercentage(widget._variety.annualizedRate()), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor)
               ]),
               buildFlex([
                 buildKeyValuePair("实盈", widget._variety.realProfit(),
-                    color: getFontColor(widget._variety.realProfit())),
-                buildKeyValuePair("波段次数", widget._variety.twoWayFrequency())
+                    titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                buildKeyValuePair("波段次数", widget._variety.twoWayFrequency(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor)
               ]),
               buildFlex([
-                buildKeyValuePair(
-                    "浮盈 (现价 ${_floatingProfitDetail()})", _buildFloatingProfit(),
-                    color: getFontColor(_buildFloatingProfit())),
+                buildKeyValuePair("浮盈 (现价 ${_floatingProfitDetail()})", _buildFloatingProfit(),
+                    titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
               ]),
               buildDivider(),
               Padding(
@@ -139,7 +118,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
                       child: new Text(
                         '总收益   ',
-                        style: TextStyle(color: color2, fontSize: 12),
+                        style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 12),
                       ),
                     ),
                     _buildTotalProfitText(),
@@ -153,18 +132,18 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
 
   Text _buildTotalProfitText() {
     if (widget._foundPrice.price == 0) {
-      return new Text("-",
-        style: TextStyle(color: getFontColor("-"), fontSize: 16),
+      return new Text(
+        "-",
+        style: TextStyle(color: cardColor.highEmphasisColor, fontSize: 16),
       );
     } else {
       var totalProfit = widget._variety.totalProfit(widget._foundPrice.price);
-      return new Text(totalProfit.objToString(),
+      return new Text(
+        totalProfit.objToString(),
         style: TextStyle(color: getFontColor(totalProfit), fontSize: 16),
       );
     }
-
   }
-
 
   _buildFloatingProfit() {
     if (widget._foundPrice.price == 0) {
@@ -177,8 +156,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
     if (widget._totalMoney == 0) {
       return "-";
     }
-    var percent = widget._variety.holdingAmount(widget._foundPrice.price) /
-        widget._totalMoney;
+    var percent = widget._variety.holdingAmount(widget._foundPrice.price) / widget._totalMoney;
     return toPercentage(percent);
   }
 
@@ -190,8 +168,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
   }
 
   String _updateTimeStr() {
-    var different =
-        DateTime.now().difference(widget._foundPrice.lastQueryTime).inMinutes;
+    var different = DateTime.now().difference(widget._foundPrice.lastQueryTime).inMinutes;
     if (different == 0) {
       return "刚刚";
     }
@@ -201,7 +178,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
   Padding buildDivider() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(_left, 0, 8, 0),
-      child: Divider(height: 0.5, color: Color(0xFFABAA9A)),
+      child: Divider(height: 0.5, color: Colors.white),
     );
   }
 

@@ -72,7 +72,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   Widget build(BuildContext context) {
     return new MaterialApp(
       home: new Scaffold(
-        floatingActionButton: MyFloat("新建网格", "", (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
+        floatingActionButton: AddVarietyFloat((_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
             (_code, _mesh, _firstPrice, _firstNumber) {
           return _code.toString().length == 6 &&
               _firstPrice != null &&
@@ -112,7 +112,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
           context: context,
           barrierDismissible: true, // user must tap button!
           builder: (BuildContext context) =>
-              DialogStatefulWidget("删除网格", "输入${_list[index].name}代码", (code) {
+              DeleteVarietyDialogStatefulWidget("请输入 ${_list[index].code}", (code) {
             setState(() {
               //todo 持久化
               _list.removeAt(index);
@@ -207,55 +207,49 @@ class CardItem extends StatelessWidget {
   }
 }
 
-class MyFloat extends StatefulWidget {
-  String _dialogTitle;
-  String _hintTitle;
+class AddVarietyFloat extends StatefulWidget {
   Function _insert;
   Function _checkOkButtonEnable;
 
-  MyFloat(this._dialogTitle, this._hintTitle, this._insert,
+  AddVarietyFloat(this._insert,
       this._checkOkButtonEnable);
 
   @override
-  _MyFloatState createState() => _MyFloatState();
+  _AddVarietyFloatState createState() => _AddVarietyFloatState();
 }
 
-class _MyFloatState extends State<MyFloat> {
+class _AddVarietyFloatState extends State<AddVarietyFloat> {
   @override
   Widget build(BuildContext context) {
     return new FloatingActionButton(
         child: Icon(Icons.add, color: Colors.black, size: 40),
         onPressed: () => _showMyDialog(context),
-        backgroundColor: Colors.yellow);
+        backgroundColor: Color(0xFFFFD103));
   }
 
   Future<void> _showMyDialog(BuildContext context) {
     return showDialog(
       context: context,
       barrierDismissible: true, // user must tap button!
-      builder: (BuildContext context) => DialogStatefulWidget(
-          widget._dialogTitle,
-          widget._hintTitle,
+      builder: (BuildContext context) => AddVarietyDialogStatefulWidget(
           widget._insert,
           widget._checkOkButtonEnable),
     );
   }
 }
 
-class DialogStatefulWidget extends StatefulWidget {
+class AddVarietyDialogStatefulWidget extends StatefulWidget {
   Function _okFunction;
   Function _checkOkButtonEnable;
-  String _dialogTitle;
-  String _hintTitle;
 
-  DialogStatefulWidget(this._dialogTitle, this._hintTitle, this._okFunction,
+  AddVarietyDialogStatefulWidget(this._okFunction,
       this._checkOkButtonEnable);
 
   @override
-  _DialogStatefulWidgetState createState() => _DialogStatefulWidgetState();
+  _AddVarietyDialogStatefulWidgetState createState() => _AddVarietyDialogStatefulWidgetState();
 }
 
-class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
+class _AddVarietyDialogStatefulWidgetState extends State<AddVarietyDialogStatefulWidget> {
   int _loading = 0;
   num _code;
   num _firstNumber;
@@ -268,11 +262,11 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget._dialogTitle),
+      title: Text("新建网格"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          numberFieldInputWidget("神秘代码", (value) {
+          numberFieldInputWidget("代码", (value) {
             _code = value;
             checkClickable();
           }, maxLength: 6),
@@ -288,7 +282,7 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
           numberFieldInputWidget("第一网价格", (value) {
             _firstPrice = value;
             checkClickable();
-          }, isPrice: true),
+          }, isPrice: true, limit: 7),
 
           numberFieldInputWidget("第一网数量", (value) {
             _firstNumber = value;
@@ -343,6 +337,72 @@ class _DialogStatefulWidgetState extends State<DialogStatefulWidget> {
       setState(() {
         _loading = 0;
       });
+      Navigator.of(context).pop();
+    };
+  }
+}
+
+
+
+class DeleteVarietyDialogStatefulWidget extends StatefulWidget {
+  Function _okFunction;
+  Function _checkOkButtonEnable;
+  String _hintTitle;
+
+  DeleteVarietyDialogStatefulWidget(this._hintTitle, this._okFunction,
+      this._checkOkButtonEnable);
+
+  @override
+  _DeleteVarietyDialogStatefulWidget createState() => _DeleteVarietyDialogStatefulWidget();
+}
+
+class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialogStatefulWidget> {
+  num _code;
+  bool enable = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("删除网格"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          numberFieldInputWidget("代码", (value) {
+            _code = value;
+            checkClickable();
+          }, hintText: widget._hintTitle),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: Text('取消'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+            child: Row(
+              children: [
+                Text('确认'),
+              ],
+            ),
+            onPressed: onOkPressed(context)),
+      ],
+    );
+  }
+
+
+  void checkClickable() {
+    setState(() {
+      enable =
+          widget._checkOkButtonEnable(_code.toString());
+    });
+  }
+
+  Function onOkPressed(BuildContext context) {
+    if (!enable) {
+      return null;
+    }
+    return () async {
+      widget._okFunction(_code.toString());
       Navigator.of(context).pop();
     };
   }
