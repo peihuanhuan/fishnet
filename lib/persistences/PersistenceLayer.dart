@@ -137,19 +137,19 @@ Future<void> saveVariety(Variety needUpdateVariety) async {
   final prefs = await SharedPreferences.getInstance();
   List<String> stringList = prefs.getStringList('varieties') ?? [];
 
-  List<Variety> varieties = [];
-  stringList.forEach((str) {
-    varieties.add(Variety.fromJson(jsonDecode(str)));
-  });
-
   List<Variety> newVarieties = [];
-  varieties.forEach((element) {
-    if(element.id != needUpdateVariety.id) {
-      newVarieties.add(element);
-    }
-  });
 
-  newVarieties.add(needUpdateVariety);
+  int index = 0;
+  for (var entry in stringList.asMap().entries) {
+    var variety = Variety.fromJson(jsonDecode(entry.value));
+    if(variety.id != needUpdateVariety.id) {
+      newVarieties.add(variety);
+    } else {
+      index = entry.key;
+    }
+  }
+
+  newVarieties.insert(index, needUpdateVariety);
 
   var list = newVarieties.map((e) => json.encoder.convert(e)).toList();
   prefs.setStringList('varieties', list);

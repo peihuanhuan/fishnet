@@ -10,6 +10,11 @@ class Trade {
   // 交易时间
   DateTime time;
 
+
+  num getAmount() {
+    return price * number;
+  }
+
   Trade(this.id, this.price, this.number, this.time);
 
   Map<String, dynamic> toJson() => {

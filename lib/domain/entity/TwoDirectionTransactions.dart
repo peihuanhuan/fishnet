@@ -41,6 +41,17 @@ class TwoDirectionTransactions {
     return sell == null ? 0 : sell.number * (sell.price - buy.price);
   }
 
+
+  // 成本
+  num costAmount() {
+    if(sell == null) {
+      return buy.getAmount();
+    } else {
+      return buy.getAmount() - sell.getAmount();
+    }
+  }
+
+
   // 虚盈
   num floatingProfit(num currentPrice) {
 

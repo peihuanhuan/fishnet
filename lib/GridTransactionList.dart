@@ -1,4 +1,3 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:fishnet/domain/entity/Trade.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
 import 'package:fishnet/persistences/PersistenceLayer.dart';
@@ -7,6 +6,7 @@ import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
 import 'domain/dto/PriceNumberPair.dart';
@@ -42,6 +42,17 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
   Future<void> updateParentState() async {
     _variety = await getByVarietyId(widget._varietyId);
+    if(_variety == null) {
+      Fluttertoast.showToast(
+          msg: "_variety为空， 内部错误",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
     _transactions = _variety.transactions;
     setState(() {
     });
@@ -297,7 +308,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
           ]),
       child: Container(
         padding: EdgeInsets.all(8),
-        child: AutoSizeText(value.toString(),
+        child: Text(value.toString(),
             maxLines: 1, style: TextStyle(color: color, fontSize: 14)),
       ),
     );

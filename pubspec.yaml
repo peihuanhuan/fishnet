@@ -23,14 +23,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # 科学计算
   decimal: ^0.3.0
+  fluttertoast: ^8.0.7
   flutter_speed_dial: ^1.2.4
   shared_preferences:
   flutter_localizations:
     sdk: flutter
-  sqflite:
-  path:
-  auto_size_text: ^2.1.0
+#  sqflite:
+#  path:
+#  auto_size_text: ^2.1.0
   intl:
 
 

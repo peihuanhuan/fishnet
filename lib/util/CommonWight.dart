@@ -20,7 +20,7 @@ const Color color1 = Color(0xFFA3A1A8);
 
 
 
-Expanded buildKeyValuePair(String title, Object value, {Color titleColor = color1, Color valueColor = color2, titleSize = 12.0, valueSize = 22.0}) {
+Expanded buildKeyValuePair(String title, Object value, {Color titleColor = color1, Color valueColor = color2, titleSize = 12.0, valueSize = 20.0}) {
   return Expanded(
     flex: 1,
     child: Align(
