@@ -303,13 +303,18 @@ class _GridTransactionListState extends State<GridTransactionList> {
             //阴影
             BoxShadow(
                 color: Colors.black54,
-                offset: Offset(1.0, 1.0),
-                blurRadius: 2.0)
+                // offset: Offset(1.0, 1.0),
+                blurRadius: 0.1)
           ]),
       child: Container(
-        padding: EdgeInsets.all(8),
-        child: Text(value.toString(),
-            maxLines: 1, style: TextStyle(color: color, fontSize: 14)),
+        height: 40,
+        width: 40,
+        // padding: EdgeInsets.all(8),
+        child: Center(
+          child: Text(value.toString(),
+              textAlign: TextAlign.center,
+              maxLines: 1, style: TextStyle(color: color, fontSize: 12)),
+        ),
       ),
     );
   }
