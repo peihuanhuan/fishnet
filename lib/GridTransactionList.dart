@@ -9,6 +9,8 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
+import 'colors/CardColor.dart';
+import 'colors/CardColorImpl1.dart';
 import 'domain/dto/PriceNumberPair.dart';
 import 'domain/entity/TwoDirectionTransactions.dart';
 
@@ -24,8 +26,8 @@ class GridTransactionList extends StatefulWidget {
   }
 }
 
-Color c1 = Color(0xFFFEF1FA);
-Color c2 = Color(0xFFEBF6FF);
+
+CardColor cardColor = CardColorImpl1();
 
 
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
@@ -59,6 +61,96 @@ class _GridTransactionListState extends State<GridTransactionList> {
   }
 
 
+  static const double _leftRightPadding = 12;
+
+  Widget xxx(int index) {
+
+    var transaction = _transactions[index];
+    var cardGlobalKey = GlobalKey();
+
+    return GestureDetector(
+      onLongPressStart: (LongPressStartDetails detail) {
+        _showMenu(detail, cardGlobalKey, index);
+      },
+      child: Card(
+          key: cardGlobalKey,
+          color: transaction.totalProfit(widget._currentPrice) >= 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12.0)),
+          ),
+          child: Column(
+            children: buildChildrenWidget(transaction),
+          )),
+    );
+  }
+
+  List<Widget> buildChildrenWidget(TwoDirectionTransactions transaction) {
+    var list =  [
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(_leftRightPadding, 12 ,12 ,6 ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                            colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          //阴影
+                          BoxShadow(
+                              color: Colors.black54,
+                              blurRadius: 0.1)
+                        ]),
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      // padding: EdgeInsets.all(8),
+                      child: Center(
+                        child: Text(transaction.level.toString(),
+                            textAlign: TextAlign.center,
+                            maxLines: 1, style: TextStyle(color: color2, fontSize: 12)),
+                      ),
+                    ),
+                  ),
+                ),
+                buildKeyValuePair("收益（元）", transaction.totalProfit(widget._currentPrice).objToString(), valueSize: 16.0)
+              ],
+            ),
+            buildFlex([
+              buildKeyValuePair("买入价格", transaction.buy.price, fractionDigits: 3),
+              buildKeyValuePair("买入数量", transaction.buy.number),
+              buildKeyValuePair("买入时间", yyyyMMddFormat.format(transaction.buy.time))
+            ]),
+          ];
+
+    if(transaction.sell != null) {
+      list.add(buildFlex([
+        buildKeyValuePair("卖出价格", transaction.sell.price, fractionDigits: 3),
+        buildKeyValuePair("卖出数量", transaction.sell.number),
+        buildKeyValuePair("持有天数", transaction.holdingDays())
+      ]));
+    }
+    return list;
+  }
+
+  Padding buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_leftRightPadding, 0, _leftRightPadding, 0),
+      child: Divider(height: 0.5, color: Colors.white),
+    );
+  }
+
+  Widget buildFlex(List<Expanded> expandeds) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_leftRightPadding, 3, _leftRightPadding, 3),
+      child: Flex(
+        direction: Axis.horizontal,
+        children: expandeds,
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     var child;
@@ -79,7 +171,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: buildItemCard(index),
+                  child: xxx(index),
                 );
               },
             ),
@@ -102,7 +194,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var cardGlobalKey = GlobalKey();
     Widget card = Card(
       key: cardGlobalKey,
-      color: transaction.sell == null ? c2 : c1,
+      color: transaction.totalProfit(widget._currentPrice) >= 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
       child: ExpansionTile(
         tilePadding: EdgeInsets.fromLTRB(0, 0, 8, 0),
         childrenPadding: EdgeInsets.all(0),
@@ -182,7 +274,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var sellPrice = transaction.sell?.price;
 
     var columnChildren = [
-      numberFieldInputWidget("买入价格",  (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
       numberFieldInputWidget("买入数量",  (number) => buyNumber = number,  isPrice: true, defaultValue: buyNumber),
       // buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
     ];
@@ -320,36 +411,41 @@ class _GridTransactionListState extends State<GridTransactionList> {
   }
 
   Expanded buildKeyValuePair(String title, Object value,
-      {Color color = color2,
-      fractionDigits = 2,
-      titleSize = 12.0,
-      valueSize = 13.0}) {
+      {Color valueColor,
+        Color titleColor,
+        fractionDigits = 2,
+        titleSize = 12.0,
+        valueSize = 13.0}) {
+
+    if(valueColor == null) {
+      valueColor = cardColor.highEmphasisColor;
+    }
+    if(titleColor == null) {
+      titleColor = cardColor.mediumEmphasisColor;
+    }
     return Expanded(
       flex: 1,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 10, 0, 8),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  title,
-                  style: TextStyle(color: color1, fontSize: titleSize),
-                  textAlign: TextAlign.left,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 10, 0, 0),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                title,
+                style: TextStyle(color: titleColor, fontSize: titleSize),
+                textAlign: TextAlign.left,
               ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
-                  child: new Text(value.objToString(fractionDigits),
-                      style: TextStyle(color: color, fontSize: valueSize)),
-                ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
+                child: new Text(value.objToString(fractionDigits),
+                    style: TextStyle(color: valueColor, fontSize: valueSize)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -270,7 +270,7 @@ class _AddVarietyDialogStatefulWidgetState extends State<AddVarietyDialogStatefu
             _code = value;
             checkClickable();
           }, maxLength: 6),
-          customFieldInputWidget("网格大小", DropdownButton<int>(
+          customFieldInputWidget("幅度", DropdownButton<int>(
               value: (_mesh * 100).toInt(),
               isExpanded: true,
               items: items(),
