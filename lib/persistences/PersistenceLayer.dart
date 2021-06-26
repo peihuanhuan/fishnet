@@ -133,6 +133,19 @@ Future<List<Variety>> getVarieties() async {
 }
 
 
+Future<void> deleteVariety(num id) async {
+  final prefs = await SharedPreferences.getInstance();
+  var stringList = prefs.getStringList('varieties') ?? [];
+  List<String> needSaveVarieties = [];
+  stringList.forEach((str) {
+    var variety = Variety.fromJson(jsonDecode(str));
+    if(variety.id != id) {
+      needSaveVarieties.add(str);
+    }
+  });
+  prefs.setStringList('varieties', needSaveVarieties);
+}
+
 Future<void> saveVariety(Variety needUpdateVariety) async {
   final prefs = await SharedPreferences.getInstance();
   List<String> stringList = prefs.getStringList('varieties') ?? [];

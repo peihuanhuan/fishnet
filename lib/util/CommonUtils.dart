@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,7 +10,6 @@ String toPercentage(num value) => (value * 100).toStringAsFixed(2) + "%";
 int id() => DateTime.now().millisecondsSinceEpoch;
 
 extension ObjectExtension on Object {
-
   outlierDesc(num value, String desc) {
     var value = this;
     if (value is int || value is num || value is double) {
@@ -37,28 +37,29 @@ extension ObjectExtension on Object {
   }
 }
 
-
 var httpClient = new HttpClient();
 
 // todo 超时情况，无网络情况
 Future<List<FoundPrice>> queryPrice(List<String> codes) async {
   var codesStr = codes.join(",");
   print('开始获取基金净值');
-  var request = await httpClient
-      .getUrl(Uri.parse("https://fishnet-api.peihuan.net/price?codes=$codesStr"));
+  var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/price?codes=$codesStr"));
   var response = await request.close();
   var responseBody = await response.transform(utf8.decoder).join();
   var decodeJson = json.decode(responseBody) as List;
-
 
   return decodeJson.map((e) => FoundPrice.fromJson(e)).toList();
 }
 
 Future<String> queryName(String code) async {
-  var request = await httpClient
-      .getUrl(Uri.parse("https://fishnet-api.peihuan.net/name?code=$code"));
-  var response = await request.close();
-  var responseBody = await response.transform(utf8.decoder).join();
-  return responseBody;
+  try {
+    var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/name?code=$code"));
+    var response = await request.close().timeout(Duration(seconds: 3));
+    var responseBody = await response.transform(utf8.decoder).join();
+    return responseBody;
+  } on TimeoutException catch (_) {
+    return "-";
+  } on SocketException catch (_) {
+    return "-";
+  }
 }
-

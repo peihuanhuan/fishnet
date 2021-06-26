@@ -22,8 +22,9 @@ class StatefulFoundCardItem extends StatefulWidget {
 
   Key key;
   VoidCallback _onLongPress;
+  VoidCallback _onTap;
 
-  StatefulFoundCardItem(this._variety, this._totalMoney, this._foundPrice, this.key, this._onLongPress)
+  StatefulFoundCardItem(this._variety, this._totalMoney, this._foundPrice, this.key, this._onLongPress, this._onTap)
       : super(key: key) {
     if (_foundPrice == null) {
       _foundPrice = FoundPrice(_variety.code, 0, DateTime.now().add(Duration(minutes: -60)));
@@ -42,11 +43,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return GridTransactionList(widget._variety.id, widget._foundPrice.price);
-        }));
-      },
+      onTap: widget._onTap,
       onLongPress: widget._onLongPress,
       child: Card(
           color:
