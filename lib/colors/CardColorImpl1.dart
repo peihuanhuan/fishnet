@@ -13,6 +13,7 @@ class CardColorImpl1 implements CardColor {
 
 
 
+
   
   // wenzi  https://material.io/components/text-fields#theming
   @override
@@ -27,5 +28,14 @@ class CardColorImpl1 implements CardColor {
   // 38%
   @override
   Color lowEmphasisColor = Color(0x60FFFFFF);
+
+  @override
+  Color flatColor = Color(0xDDFFFFFF);
+
+  @override
+  Color lossColor = Color(0xDDFFFFFF);
+
+  @override
+  Color profitColor = Color(0xDDFFFFFF);
 
 }

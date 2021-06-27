@@ -12,4 +12,11 @@ class CardColor {
   Color mediumEmphasisColor;
   Color lowEmphasisColor;
 
+
+  // 盈利色
+  Color profitColor;
+  // 亏损色
+  Color lossColor;
+  // 平色
+  Color flatColor;
 }

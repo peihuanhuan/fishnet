@@ -8,8 +8,6 @@ import 'package:flutter/services.dart';
 import 'PrecisionLimitFormatter.dart';
 
 
-const double _left = 22;
-
 const Color color4 = Color(0xFF3EB595);
 
 const Color color3 = Color(0xFFFF665A);
@@ -18,26 +16,47 @@ const Color color2 = Color(0xFF7D6B7D);
 
 const Color color1 = Color(0xFFA3A1A8);
 
+const double leftRightPadding = 22;
+
+var cardShape = RoundedRectangleBorder(
+  borderRadius: BorderRadius.all(Radius.circular(24.0)),
+);
 
 
-Expanded buildKeyValuePair(String title, Object value, {Color titleColor = color1, Color valueColor = color2, titleSize = 12.0, valueSize = 20.0}) {
+Widget buildFlex(List<Expanded> expandeds) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(leftRightPadding, 3, leftRightPadding, 3),
+    child: Flex(
+      direction: Axis.horizontal,
+      children: expandeds,
+    ),
+  );
+}
+
+
+Expanded buildKeyValuePair(String title, Object value,
+    {Color titleColor = color1, int flex = 1, Color valueColor = color2, titleSize = 12.0, valueSize = 16.0}) {
   return Expanded(
-    flex: 1,
+    flex: flex,
     child: Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(_left, 10, 8, 8),
+        padding: const EdgeInsets.fromLTRB(leftRightPadding, 10, 8, 8),
         child: Column(
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(title, style: TextStyle(color: titleColor, fontSize: titleSize), textAlign: TextAlign.left,),
+              child: Text(
+                title,
+                style: TextStyle(color: titleColor, fontSize: titleSize),
+                textAlign: TextAlign.left,
+              ),
             ),
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
-                child: new Text(value.objToString(), style: TextStyle(color: valueColor, fontSize: valueSize)),
+                child: new Text(value.objToString(), style: TextStyle(color: valueColor, fontSize: valueSize, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -49,8 +68,7 @@ Expanded buildKeyValuePair(String title, Object value, {Color titleColor = color
 
 Widget numberFieldInputWidget(String title, Function onChange,
     {int maxLength, bool isPrice = false, int limit = 8, hintText, num defaultValue}) {
-
-  if(defaultValue != null) {
+  if (defaultValue != null) {
     onChange(defaultValue);
   }
   return customFieldInputWidget(
@@ -61,9 +79,7 @@ Widget numberFieldInputWidget(String title, Function onChange,
         keyboardType: TextInputType.number,
         maxLength: maxLength,
         inputFormatters: <TextInputFormatter>[
-          !isPrice
-              ? FilteringTextInputFormatter.digitsOnly
-              : PrecisionLimitFormatter(3),
+          !isPrice ? FilteringTextInputFormatter.digitsOnly : PrecisionLimitFormatter(3),
           LengthLimitingTextInputFormatter(limit),
           FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
         ],
@@ -75,8 +91,7 @@ Widget numberFieldInputWidget(String title, Function onChange,
       ));
 }
 
-Widget stringFieldInputWidget(String title, Function onChange,
-    {int limit = 8, hintText, defaultValue = ""}) {
+Widget stringFieldInputWidget(String title, Function onChange, {int limit = 8, hintText, defaultValue = ""}) {
   return customFieldInputWidget(
       title,
       TextField(
@@ -93,8 +108,6 @@ Widget stringFieldInputWidget(String title, Function onChange,
       ));
 }
 
-
-
 Widget customFieldInputWidget(String title, Widget valueChild) {
   return Flex(
     direction: Axis.horizontal,
@@ -109,29 +122,21 @@ Widget customFieldInputWidget(String title, Widget valueChild) {
           ),
         ),
       ),
-      Expanded(
-          flex: 4,
-          child: valueChild)
+      Expanded(flex: 4, child: valueChild)
     ],
   );
 }
 
-
 Color getFontColor(Object value) {
   var normal = Color(0xFF7D6B7D);
-  if(!(value is num)) {
+  if (!(value is num)) {
     return normal;
   }
-  if(value as num < 0) {
+  if (value as num < 0) {
     return Color(0xFF3EB595);
   }
-  if(value == 0) {
+  if (value == 0) {
     return normal;
   }
   return Color(0xFFFF665A);
 }
-
-
-
-
-

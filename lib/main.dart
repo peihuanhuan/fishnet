@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fishnet/colors/CardColorImpl2.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:fishnet/widgets/AddVarietyFloat.dart';
@@ -8,10 +9,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'GridTransactionList.dart';
+import 'colors/CardColor.dart';
+import 'colors/CardColorImpl1.dart';
 import 'domain/entity/FoundPrice.dart';
 import 'domain/entity/Variety.dart';
 import 'persistences/PersistenceLayer.dart';
+
+
+CardColor cardColor = CardColorImpl2();
+
 
 void main() {
   runApp(new AnimatedListSample());
@@ -74,6 +82,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
+      color: Color(0xFFEFEFEF),
       home: new Scaffold(
         floatingActionButton: AddVarietyFloat(
             (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
@@ -85,17 +94,25 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
               _firstNumber > 100;
         }),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        body: RefreshIndicator(
-          onRefresh: () async {
-            update();
-            print('refresh ');
-          },
-          child: new Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView.builder(
-              key: _listKey,
-              itemCount: _list.length,
-              itemBuilder: _buildItem,
+        body: SafeArea( // 自动处理刘海屏
+          child: RefreshIndicator(
+            onRefresh: () async {
+              update();
+            },
+            child: Column(
+              children: [
+                Header(_list._items, foundPriceMap),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ListView.builder(
+                      key: _listKey,
+                      itemCount: _list.length,
+                      itemBuilder: _buildItem,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -115,11 +132,14 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
 
   // Used to build list items that haven't been removed.
   Widget _buildItem(BuildContext context, int index) {
+
+    var item = _list[index];
+
     return new CardItem(
-      item: _list[index],
+      item: item,
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return GridTransactionList(_list[index].id, foundPriceMap[_list[index].code].price);
+          return GridTransactionList(item.id, foundPriceMap[item.code].price);
         })).then((value) {
           update();
         });
@@ -128,15 +148,25 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
         showDialog(
           context: context,
           barrierDismissible: true, // user must tap button!
-          builder: (BuildContext context) => DeleteVarietyDialog("请输入 ${_list[index].code}", (code) {
+          builder: (BuildContext context) {
+            return DeleteVarietyDialog("请输入 ${item.code}", (code) {
             setState(() {
-              var needDelete = _list[index];
+              var needDelete = item;
               _list.removeAt(index);
               deleteVariety(needDelete.id);
+              Fluttertoast.showToast(
+                backgroundColor: Colors.white,
+                textColor: Colors.black,
+                msg: "删除成功",
+                toastLength: Toast.LENGTH_SHORT,
+                fontSize: 14.0,
+              );
+
             });
           }, (code) {
-            return code == _list[index].code;
-          }),
+            return code == item.code;
+          });
+          },
         );
       },
     );
@@ -205,6 +235,69 @@ class ListModel<E> {
   int indexOf(E item) => _items.indexOf(item);
 }
 
+
+class Header extends StatefulWidget {
+
+  List<Variety> _varieties;
+  Map<String, FoundPrice> _foundPriceMap;
+
+
+  Header(this._varieties, this._foundPriceMap);
+
+  @override
+  _HeaderState createState() => _HeaderState();
+}
+
+class _HeaderState extends State<Header> {
+  @override
+  Widget build(BuildContext context) {
+
+
+
+    var totalAmount = widget._varieties.map((e) => e.holdingAmount(widget._foundPriceMap[e.code] == null ? 0 : widget._foundPriceMap[e.code].price))
+        .fold(0, (curr, next) => curr + next);
+
+    var totalCost = widget._varieties.map((e) => e.cost())
+        .fold(0, (curr, next) => curr + next);
+
+    var totalProfit = widget._varieties.map((e) => e.totalProfit(widget._foundPriceMap[e.code] == null ? 0 : widget._foundPriceMap[e.code].price))
+        .fold(0, (curr, next) => curr + next);
+
+    print(totalAmount);
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Card(
+        shape: cardShape,
+        color: cardColor.flatBgColor,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+              children: [
+                buildFlex([buildKeyValuePair("总资产（元）", totalAmount.toStringAsFixed(2), titleSize: 16.0, valueSize: 22.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),]),
+                buildFlex([
+                  buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2)),
+                  buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), valueColor: getMoneyColor(totalProfit, cardColor))
+                ]),
+              ],
+      ),
+            ),
+          ],
+        ),),
+    );
+
+  }
+
+
+  Flex buildFlex(List<Expanded> expandeds) {
+    return Flex(
+      direction: Axis.horizontal,
+      children: expandeds,
+    );
+  }
+
+
+}
 class CardItem extends StatelessWidget {
   const CardItem({
     Key key,

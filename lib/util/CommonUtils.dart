@@ -1,13 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
+import 'package:fishnet/colors/CardColor.dart';
 import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
 
 String toPercentage(num value) => (value * 100).toStringAsFixed(2) + "%";
 
 int id() => DateTime.now().millisecondsSinceEpoch;
+
+Color getMoneyColor(num totalProfit, CardColor cardColor) {
+  var color = cardColor.flatColor;
+  if(totalProfit > 0) {
+    color = cardColor.profitColor;
+  } else if(totalProfit < 0) {
+    color = cardColor.lossColor;
+  }
+  return color;
+}
+
 
 extension ObjectExtension on Object {
   outlierDesc(num value, String desc) {

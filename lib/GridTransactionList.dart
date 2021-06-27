@@ -61,7 +61,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
   }
 
 
-  static const double _leftRightPadding = 12;
 
   Widget xxx(int index) {
 
@@ -89,7 +88,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
             Row(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(_leftRightPadding, 12 ,12 ,6 ),
+                  padding: const EdgeInsets.fromLTRB(leftRightPadding, 12 ,12 ,6 ),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -135,20 +134,12 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
   Padding buildDivider() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_leftRightPadding, 0, _leftRightPadding, 0),
+      padding: const EdgeInsets.fromLTRB(leftRightPadding, 0, leftRightPadding, 0),
       child: Divider(height: 0.5, color: Colors.white),
     );
   }
 
-  Widget buildFlex(List<Expanded> expandeds) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_leftRightPadding, 3, _leftRightPadding, 3),
-      child: Flex(
-        direction: Axis.horizontal,
-        children: expandeds,
-      ),
-    );
-  }
+
 
 
   @override

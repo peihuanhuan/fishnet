@@ -64,6 +64,9 @@ class TwoDirectionTransactions {
 
   // 持有金额
   num holdingAmount(num currentPrice) {
+    if(currentPrice == 0) {
+      return costAmount();
+    }
     return currentPrice * retainedNumber();
   }
 
