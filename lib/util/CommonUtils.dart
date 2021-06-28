@@ -11,6 +11,9 @@ String toPercentage(num value) => (value * 100).toStringAsFixed(2) + "%";
 
 int id() => DateTime.now().millisecondsSinceEpoch;
 
+const int NO_COST = 2^63 - 1;
+
+
 Color getMoneyColor(num totalProfit, CardColor cardColor) {
   var color = cardColor.flatColor;
   if(totalProfit > 0) {

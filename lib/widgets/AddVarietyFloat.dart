@@ -80,7 +80,7 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
           }),
           stringFieldInputWidget("标签", (value) {
             _tag = value;
-          }, hintText: "小备注"),
+          }, hintText: "备注"),
         ],
       ),
       actions: <Widget>[

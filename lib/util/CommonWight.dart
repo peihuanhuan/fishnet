@@ -92,6 +92,9 @@ Widget numberFieldInputWidget(String title, Function onChange,
 }
 
 Widget stringFieldInputWidget(String title, Function onChange, {int limit = 8, hintText, defaultValue = ""}) {
+  if (defaultValue != null) {
+    onChange(defaultValue);
+  }
   return customFieldInputWidget(
       title,
       TextField(

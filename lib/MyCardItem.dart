@@ -6,6 +6,8 @@ import 'package:fishnet/colors/CardColorImpl1.dart';
 import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
+import 'package:fishnet/widgets/DeleteVarietyDialog.dart';
+import 'package:fishnet/widgets/EditVarietyDialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -21,10 +23,11 @@ class StatefulFoundCardItem extends StatefulWidget {
   FoundPrice _foundPrice;
 
   Key key;
-  VoidCallback _onLongPress;
+  Function _remove;
+  Function _edit;
   VoidCallback _onTap;
 
-  StatefulFoundCardItem(this._variety, this._totalMoney, this._foundPrice, this.key, this._onLongPress, this._onTap)
+  StatefulFoundCardItem(this._variety, this._totalMoney, this._foundPrice, this.key, this._remove, this._edit, this._onTap)
       : super(key: key) {
     if (_foundPrice == null) {
       _foundPrice = FoundPrice(_variety.code, 0, DateTime.now().add(Duration(minutes: -60)));
@@ -41,12 +44,51 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+
+    var cardGlobalKey = GlobalKey();
+
+
+    return GestureDetector(
       onTap: widget._onTap,
-      onLongPress: widget._onLongPress,
+      onLongPressStart: (LongPressStartDetails detail) async {
+        var findRenderObject =
+        (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
+        var dy = findRenderObject.localToGlobal(Offset.zero).dy;
+        var v = await showMenu(
+            context: context,
+            position: RelativeRect.fromLTRB(
+                detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
+            items: <PopupMenuItem<String>>[
+              new PopupMenuItem<String>(value: 'edit', child: new Text('修改')),
+              new PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
+            ]);
+
+        if(v == "remove") {
+          showDialog(
+            context: context,
+            barrierDismissible: true, // user must tap button!
+            builder: (BuildContext context) {
+              return DeleteVarietyDialog("请输入 ${widget._variety.code}", (code) => code == widget._variety.code,
+                  widget._remove);
+            },
+          );
+        }
+
+        if(v == "edit") {
+          showDialog(
+            context: context,
+            barrierDismissible: true, // user must tap button!
+            builder: (BuildContext context) {
+              return EditVarietyDialog(widget._variety.name, widget._variety.tag, (name, tag) {widget._edit(name, tag);});
+            },
+          );
+        }
+
+      },
       child: Padding(
         padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
         child: Card(
+          key: cardGlobalKey,
             color:
                 widget._variety.totalProfit(widget._foundPrice.price) >= 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
             shape: cardShape,
@@ -60,7 +102,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          new Text(widget._variety.name, style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: cardColor.highEmphasisColor)),
+                          new Text(widget._variety.name ?? "-", style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: cardColor.highEmphasisColor)),
                           new Text(widget._variety.code, style: TextStyle(fontSize: 12, color: cardColor.mediumEmphasisColor)),
                         ],
                       ),
@@ -97,7 +139,9 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                   buildKeyValuePair("波段次数", widget._variety.twoWayFrequency(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
                 ]),
                 buildFlex([
-                  buildKeyValuePair("成本", widget._variety.cost().objToString(3), flex: 1, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                  widget._variety.averageCost() == NO_COST
+                      ? buildKeyValuePair("成本", "暂无", flex: 1, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.lowEmphasisColor, valueSize: 13.0)
+                      : buildKeyValuePair("成本", widget._variety.averageCost().objToString(3), flex: 1, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
 
                   widget._foundPrice.price == 0
                       ? buildKeyValuePair("现价", "暂无",flex: 2, valueSize: 13.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.lowEmphasisColor)

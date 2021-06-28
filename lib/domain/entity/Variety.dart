@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:fishnet/domain/dto/PriceNumberPair.dart';
 import 'package:fishnet/main.dart';
+import 'package:fishnet/util/CommonUtils.dart';
 
 import 'Trade.dart';
 import 'TwoDirectionTransactions.dart';
@@ -159,15 +160,20 @@ class Variety {
       this.firstNumber, this.tag, this.transactions, this.createTime);
 
 
-  Object cost() {
+
+  int totalCost() {
+    return transactions.map((e) => e.costAmount())
+        .fold(0, (curr, next) => curr + next);
+  }
+
+  num averageCost() {
     var totalNumber = retainedNumber();
 
-    var totalCost = transactions.map((e) => e.costAmount())
-        .fold(0, (curr, next) => curr + next);
+
     if(totalNumber == 0) {
-      return "-";
+      return NO_COST;
     }
-    return totalCost / totalNumber;
+    return totalCost() / totalNumber;
   }
 
   int retainedNumber() {

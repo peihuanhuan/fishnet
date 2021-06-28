@@ -8,7 +8,7 @@ import 'package:fishnet/widgets/DeleteVarietyDialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+// import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'GridTransactionList.dart';
 import 'colors/CardColor.dart';
@@ -53,7 +53,7 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
 
     var initialItems = await getVarieties();
 
-    initialItems.addAll(defaultVarieties);
+    // initialItems.addAll(defaultVarieties);
     _list = new ListModel<Variety>(
       listKey: _listKey,
       initialItems: initialItems,
@@ -117,16 +117,16 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
           ),
         ),
       ),
-      localizationsDelegates: [
-        //此处 系统是什么语言就显示什么语言
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: [
-        //此处 系统是什么语言就显示什么语言
-        const Locale('zh', 'CH'),
-        const Locale('en', 'US'),
-      ],
+      // localizationsDelegates: [
+      //   //此处 系统是什么语言就显示什么语言
+      //   GlobalMaterialLocalizations.delegate,
+      //   GlobalWidgetsLocalizations.delegate,
+      // ],
+      // supportedLocales: [
+      //   //此处 系统是什么语言就显示什么语言
+      //   const Locale('zh', 'CH'),
+      //   const Locale('en', 'US'),
+      // ],
     );
   }
 
@@ -135,42 +135,94 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
 
     var item = _list[index];
 
+
     return new CardItem(
       item: item,
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return GridTransactionList(item.id, foundPriceMap[item.code].price);
+          return GridTransactionList(item.id, foundPriceMap[item.code] == null ? 0: foundPriceMap[item.code].price);
         })).then((value) {
           update();
         });
       },
-      onLongPress: () {
-        showDialog(
-          context: context,
-          barrierDismissible: true, // user must tap button!
-          builder: (BuildContext context) {
-            return DeleteVarietyDialog("请输入 ${item.code}", (code) {
-            setState(() {
-              var needDelete = item;
-              _list.removeAt(index);
-              deleteVariety(needDelete.id);
-              Fluttertoast.showToast(
-                backgroundColor: Colors.white,
-                textColor: Colors.black,
-                msg: "删除成功",
-                toastLength: Toast.LENGTH_SHORT,
-                fontSize: 14.0,
-              );
 
-            });
-          }, (code) {
-            return code == item.code;
-          });
-          },
-        );
+      edit: (name, tag) {
+        setState(() {
+          item.name = name;
+          item.tag = tag;
+          saveVariety(item);
+        });
       },
+      remove: () {
+        setState(() {
+          var needDelete = item;
+          _list.removeAt(index);
+          deleteVariety(needDelete.id);
+          Fluttertoast.showToast(
+            backgroundColor: Colors.white,
+            textColor: Colors.black,
+            msg: "删除成功",
+            toastLength: Toast.LENGTH_SHORT,
+            fontSize: 14.0,
+          );
+        });
+      },
+
     );
   }
+
+
+  Future<void> _showMenu(LongPressStartDetails detail,
+      GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
+    // RenderBox renderBox = cardGlobalKey.currentContext.findRenderObject();
+    // var offset = renderBox.localToGlobal(Offset(0.0, renderBox.size.height));
+    // return offset.dy;
+
+
+    Variety item = _list[index];
+    var findRenderObject =
+    (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
+    var dy = findRenderObject.localToGlobal(Offset.zero).dy;
+    var v = await showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(
+            detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
+        items: <PopupMenuItem<String>>[
+          new PopupMenuItem<String>(value: 'edit', child: new Text('编辑')),
+          new PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
+        ]);
+    if (v == "edit") {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return null;
+          });
+    }
+    if (v == "remove") {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return DeleteVarietyDialog("请输入 ${item.code}", (code) {
+              setState(() {
+                var needDelete = item;
+                _list.removeAt(index);
+                deleteVariety(needDelete.id);
+                Fluttertoast.showToast(
+                  backgroundColor: Colors.white,
+                  textColor: Colors.black,
+                  msg: "删除成功",
+                  toastLength: Toast.LENGTH_SHORT,
+                  fontSize: 14.0,
+                );
+
+              });
+            }, (code) {
+              return code == item.code;
+            });
+          });
+    }
+  }
+
 
   Widget _buildRemovedItem(Variety item, BuildContext context, Animation<double> animation) {
     return new CardItem(
@@ -257,13 +309,12 @@ class _HeaderState extends State<Header> {
     var totalAmount = widget._varieties.map((e) => e.holdingAmount(widget._foundPriceMap[e.code] == null ? 0 : widget._foundPriceMap[e.code].price))
         .fold(0, (curr, next) => curr + next);
 
-    var totalCost = widget._varieties.map((e) => e.cost())
+    var totalCost = widget._varieties.map((e) => e.totalCost())
         .fold(0, (curr, next) => curr + next);
 
     var totalProfit = widget._varieties.map((e) => e.totalProfit(widget._foundPriceMap[e.code] == null ? 0 : widget._foundPriceMap[e.code].price))
         .fold(0, (curr, next) => curr + next);
 
-    print(totalAmount);
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Card(
@@ -295,24 +346,26 @@ class _HeaderState extends State<Header> {
       children: expandeds,
     );
   }
-
-
 }
+
+
 class CardItem extends StatelessWidget {
   const CardItem({
     Key key,
-    this.onLongPress,
+    this.remove,
+    this.edit,
     this.onTap,
     @required this.item,
   }) : super(key: key);
 
-  final VoidCallback onLongPress;
+  final Function remove;
+  final Function edit;
   final VoidCallback onTap;
   final Variety item;
 
   @override
   Widget build(BuildContext context) {
-    return StatefulFoundCardItem(item, totalAmount, foundPriceMap[item.code], key, onLongPress, onTap);
+    return StatefulFoundCardItem(item, totalAmount, foundPriceMap[item.code], key, remove, edit, onTap);
   }
 }
 
