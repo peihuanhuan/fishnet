@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:fishnet/colors/CardColorImpl2.dart';
 import 'package:fishnet/util/CommonUtils.dart';
@@ -101,13 +102,12 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
             },
             child: Column(
               children: [
-                Header(_list._items, foundPriceMap),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: ListView.builder(
                       key: _listKey,
-                      itemCount: _list.length,
+                      itemCount: max(_list.length, 1) + 1,
                       itemBuilder: _buildItem,
                     ),
                   ),
@@ -117,25 +117,24 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
           ),
         ),
       ),
-      // localizationsDelegates: [
-      //   //此处 系统是什么语言就显示什么语言
-      //   GlobalMaterialLocalizations.delegate,
-      //   GlobalWidgetsLocalizations.delegate,
-      // ],
-      // supportedLocales: [
-      //   //此处 系统是什么语言就显示什么语言
-      //   const Locale('zh', 'CH'),
-      //   const Locale('en', 'US'),
-      // ],
     );
   }
 
-  // Used to build list items that haven't been removed.
   Widget _buildItem(BuildContext context, int index) {
 
+    if(index == 0) {
+      return Header(_list._items, foundPriceMap);
+    }
+
+    if(index == 1 && _list.length == 0) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Center(child: Text("不来一个？", style: TextStyle(fontSize: 13, color: cardColor.lowEmphasisColor),)),
+      );
+    }
+
+    index--;
     var item = _list[index];
-
-
     return new CardItem(
       item: item,
       onTap: () {
@@ -172,56 +171,6 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   }
 
 
-  Future<void> _showMenu(LongPressStartDetails detail,
-      GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
-    // RenderBox renderBox = cardGlobalKey.currentContext.findRenderObject();
-    // var offset = renderBox.localToGlobal(Offset(0.0, renderBox.size.height));
-    // return offset.dy;
-
-
-    Variety item = _list[index];
-    var findRenderObject =
-    (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
-    var dy = findRenderObject.localToGlobal(Offset.zero).dy;
-    var v = await showMenu(
-        context: context,
-        position: RelativeRect.fromLTRB(
-            detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
-        items: <PopupMenuItem<String>>[
-          new PopupMenuItem<String>(value: 'edit', child: new Text('编辑')),
-          new PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
-        ]);
-    if (v == "edit") {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return null;
-          });
-    }
-    if (v == "remove") {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return DeleteVarietyDialog("请输入 ${item.code}", (code) {
-              setState(() {
-                var needDelete = item;
-                _list.removeAt(index);
-                deleteVariety(needDelete.id);
-                Fluttertoast.showToast(
-                  backgroundColor: Colors.white,
-                  textColor: Colors.black,
-                  msg: "删除成功",
-                  toastLength: Toast.LENGTH_SHORT,
-                  fontSize: 14.0,
-                );
-
-              });
-            }, (code) {
-              return code == item.code;
-            });
-          });
-    }
-  }
 
 
   Widget _buildRemovedItem(Variety item, BuildContext context, Animation<double> animation) {
@@ -315,26 +264,41 @@ class _HeaderState extends State<Header> {
     var totalProfit = widget._varieties.map((e) => e.totalProfit(widget._foundPriceMap[e.code] == null ? 0 : widget._foundPriceMap[e.code].price))
         .fold(0, (curr, next) => curr + next);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Card(
-        shape: cardShape,
-        color: cardColor.flatBgColor,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-              children: [
-                buildFlex([buildKeyValuePair("总资产（元）", totalAmount.toStringAsFixed(2), titleSize: 16.0, valueSize: 22.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),]),
-                buildFlex([
-                  buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2)),
-                  buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), valueColor: getMoneyColor(totalProfit, cardColor))
-                ]),
-              ],
-      ),
-            ),
-          ],
-        ),),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(3,12,0,6),
+          child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text("总览", style: TextStyle(fontSize: 18), textAlign: TextAlign.start,)),
+        ),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          ),
+          color: cardColor.flatBgColor,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                children: [
+                  buildFlex([buildKeyValuePair("总资产（元）", totalAmount.toStringAsFixed(2), titleSize: 16.0, valueSize: 22.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),]),
+                  buildFlex([
+                    buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2)),
+                    buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), valueColor: getMoneyColor(totalProfit, cardColor))
+                  ]),
+                ],
+        ),
+              ),
+            ],
+          ),),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(3,12,0,0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+              child: Text("我的品种", style: TextStyle(fontSize: 18), textAlign: TextAlign.start,)),
+        )
+      ],
     );
 
   }

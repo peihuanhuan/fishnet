@@ -63,7 +63,7 @@ Future<List<FoundPrice>> queryPrice(List<String> codes) async {
   var response = await request.close();
   var responseBody = await response.transform(utf8.decoder).join();
   var decodeJson = json.decode(responseBody) as List;
-
+  print('结果： $decodeJson');
   return decodeJson.map((e) => FoundPrice.fromJson(e)).toList();
 }
 

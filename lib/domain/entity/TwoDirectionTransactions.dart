@@ -12,7 +12,6 @@ class TwoDirectionTransactions {
   Trade buy;
   Trade sell;
 
-  //todo 一些标记，如 网的比例
   String tag;
 
 

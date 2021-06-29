@@ -19,11 +19,11 @@ class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("删除网格"),
+      title: Text("删除品种"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          numberFieldInputWidget("代码", (value) {
+          numberFieldInputWidget("确认代码", (value) {
             _code = value;
             checkClickable();
           }, hintText: widget._hintTitle),
@@ -56,7 +56,7 @@ class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialog> {
       return null;
     }
     return () async {
-      widget._okFunction(_code.toString());
+      widget._okFunction();
       Navigator.of(context).pop();
     };
   }

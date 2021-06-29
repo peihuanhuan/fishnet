@@ -102,7 +102,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          new Text(widget._variety.name ?? "-", style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: cardColor.highEmphasisColor)),
+                          new Text(widget._variety.name.isEmpty ? "-" : widget._variety.name, style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: cardColor.highEmphasisColor)),
                           new Text(widget._variety.code, style: TextStyle(fontSize: 12, color: cardColor.mediumEmphasisColor)),
                         ],
                       ),

@@ -51,7 +51,7 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("新建网格"),
+      title: Text("新建品种"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -80,7 +80,7 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
           }),
           stringFieldInputWidget("标签", (value) {
             _tag = value;
-          }, hintText: "备注"),
+          }, defaultValue: _tag, hintText: "可选"),
         ],
       ),
       actions: <Widget>[
