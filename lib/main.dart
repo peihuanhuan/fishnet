@@ -83,7 +83,9 @@ class _AnimatedListSampleState extends State<AnimatedListSample> {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      color: Color(0xFFEFEFEF),
+      theme: ThemeData(
+        scaffoldBackgroundColor: cardColor.bgColor,
+      ),
       home: new Scaffold(
         floatingActionButton: AddVarietyFloat(
             (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
@@ -270,7 +272,7 @@ class _HeaderState extends State<Header> {
           padding: const EdgeInsets.fromLTRB(3,12,0,6),
           child: Align(
               alignment: Alignment.centerLeft,
-              child: Text("总览", style: TextStyle(fontSize: 18), textAlign: TextAlign.start,)),
+              child: Text("账户总览", style: TextStyle(fontSize: 18), textAlign: TextAlign.start,)),
         ),
         Card(
           shape: RoundedRectangleBorder(
@@ -284,8 +286,8 @@ class _HeaderState extends State<Header> {
                 children: [
                   buildFlex([buildKeyValuePair("总资产（元）", totalAmount.toStringAsFixed(2), titleSize: 16.0, valueSize: 22.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),]),
                   buildFlex([
-                    buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2)),
-                    buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), valueColor: getMoneyColor(totalProfit, cardColor))
+                    buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                    buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), titleColor: cardColor.mediumEmphasisColor, valueColor: getMoneyColor(totalProfit, cardColor))
                   ]),
                 ],
         ),
@@ -296,7 +298,7 @@ class _HeaderState extends State<Header> {
           padding: const EdgeInsets.fromLTRB(3,12,0,0),
           child: Align(
             alignment: Alignment.centerLeft,
-              child: Text("我的品种", style: TextStyle(fontSize: 18), textAlign: TextAlign.start,)),
+              child: Text("我的品种", style: TextStyle(fontSize: 18, ), textAlign: TextAlign.start, )),
         )
       ],
     );

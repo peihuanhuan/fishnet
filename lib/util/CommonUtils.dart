@@ -24,6 +24,16 @@ Color getMoneyColor(num totalProfit, CardColor cardColor) {
   return color;
 }
 
+Color getBgColor(num totalProfit, CardColor cardColor) {
+  var color = cardColor.flatBgColor;
+  if(totalProfit > 0) {
+    color = cardColor.profitBgColor;
+  } else if(totalProfit < 0) {
+    color = cardColor.lossBgColor;
+  }
+  return color;
+}
+
 
 extension ObjectExtension on Object {
   outlierDesc(num value, String desc) {

@@ -38,4 +38,7 @@ class CardColorImpl1 implements CardColor {
   @override
   Color profitColor = Color(0xDDFFFFFF);
 
+  @override
+  Color bgColor = Color(0xFFEFEFEF);
+
 }

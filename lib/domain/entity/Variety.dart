@@ -161,7 +161,7 @@ class Variety {
 
 
 
-  int totalCost() {
+  num totalCost() {
     return transactions.map((e) => e.costAmount())
         .fold(0, (curr, next) => curr + next);
   }

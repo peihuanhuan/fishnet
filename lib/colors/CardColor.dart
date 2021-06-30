@@ -8,6 +8,8 @@ class CardColor {
   // 平 背景色
   Color flatBgColor;
 
+  Color bgColor;
+
   Color highEmphasisColor;
   Color mediumEmphasisColor;
   Color lowEmphasisColor;

@@ -7,15 +7,6 @@ import 'package:flutter/services.dart';
 
 import 'PrecisionLimitFormatter.dart';
 
-
-const Color color4 = Color(0xFF3EB595);
-
-const Color color3 = Color(0xFFFF665A);
-
-const Color color2 = Color(0xFF7D6B7D);
-
-const Color color1 = Color(0xFFA3A1A8);
-
 const double leftRightPadding = 22;
 
 var cardShape = RoundedRectangleBorder(
@@ -35,7 +26,7 @@ Widget buildFlex(List<Expanded> expandeds) {
 
 
 Expanded buildKeyValuePair(String title, Object value,
-    {Color titleColor = color1, int flex = 1, Color valueColor = color2, titleSize = 12.0, valueSize = 16.0}) {
+    {Color titleColor, int flex = 1, Color valueColor, titleSize = 12.0, valueSize = 16.0}) {
   return Expanded(
     flex: flex,
     child: Align(

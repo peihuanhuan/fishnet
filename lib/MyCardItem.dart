@@ -89,8 +89,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
         padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
         child: Card(
           key: cardGlobalKey,
-            color:
-                widget._variety.totalProfit(widget._foundPrice.price) >= 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
+            color: getBgColor(widget._variety.totalProfit(widget._foundPrice.price), cardColor),
             shape: cardShape,
             child: Column(
               children: [

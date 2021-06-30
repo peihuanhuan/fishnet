@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 
 import 'colors/CardColor.dart';
 import 'colors/CardColorImpl1.dart';
+import 'colors/CardColorImpl2.dart';
 import 'domain/dto/PriceNumberPair.dart';
 import 'domain/entity/TwoDirectionTransactions.dart';
 
@@ -27,7 +28,7 @@ class GridTransactionList extends StatefulWidget {
 }
 
 
-CardColor cardColor = CardColorImpl1();
+CardColor cardColor = CardColorImpl2();
 
 
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
@@ -62,7 +63,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
 
 
-  Widget xxx(int index) {
+  Widget buildCardItem(int index) {
 
     var transaction = _transactions[index];
     var cardGlobalKey = GlobalKey();
@@ -73,7 +74,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
       },
       child: Card(
           key: cardGlobalKey,
-          color: transaction.totalProfit(widget._currentPrice) >= 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
+          color: getBgColor(transaction.totalProfit(widget._currentPrice), cardColor),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12.0)),
           ),
@@ -107,12 +108,12 @@ class _GridTransactionListState extends State<GridTransactionList> {
                       child: Center(
                         child: Text(transaction.level.toString(),
                             textAlign: TextAlign.center,
-                            maxLines: 1, style: TextStyle(color: color2, fontSize: 12)),
+                            maxLines: 1, style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 12)),
                       ),
                     ),
                   ),
                 ),
-                buildKeyValuePair("收益（元）", transaction.totalProfit(widget._currentPrice).objToString(), valueSize: 16.0)
+                buildKeyValuePair("收益（元）", transaction.totalProfit(widget._currentPrice).objToString(),titleSize: 11.0 ,valueSize: 16.0, valueColor: getMoneyColor(transaction.totalProfit(widget._currentPrice), cardColor))
               ],
             ),
             buildFlex([
@@ -150,7 +151,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
           child: Text(
             "还没有数据哦",
             textAlign: TextAlign.center,
-            style: TextStyle(color: color1, fontSize: 12),
+            style: TextStyle(color: cardColor.lowEmphasisColor, fontSize: 12),
           ),
         );
     } else {
@@ -162,7 +163,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: xxx(index),
+                  child: buildCardItem(index),
                 );
               },
             ),
@@ -174,61 +175,15 @@ class _GridTransactionListState extends State<GridTransactionList> {
     return Scaffold(
       floatingActionButton: MyAddTradeFloat(_variety, updateParentState),
       body: Container(
-        color: Colors.white,
+        color: cardColor.bgColor,
         child: child,
       ),
     );
   }
 
-  Widget buildItemCard(int index) {
-    var transaction = _transactions[index];
-    var cardGlobalKey = GlobalKey();
-    Widget card = Card(
-      key: cardGlobalKey,
-      color: transaction.totalProfit(widget._currentPrice) >= 0 ? cardColor.flatBgColor : cardColor.lossBgColor,
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.fromLTRB(0, 0, 8, 0),
-        childrenPadding: EdgeInsets.all(0),
-        trailing: Text(
-            "￥${transaction.totalProfit(widget._currentPrice).objToString()}",
-            style: TextStyle(
-                fontSize: 15,
-                color: getFontColor(
-                    transaction.totalProfit(widget._currentPrice)))),
-        leading: buildLeading("${transaction.level}"),
-        title: buildTitle(transaction),
-        children: <Widget>[
-          GestureDetector(
-            onLongPressStart: (LongPressStartDetails detail) {
-              _showMenu(detail, cardGlobalKey, index);
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: <Widget>[
-                  buildKeyValuePair(
-                      "买入时间", yyyyMMddFormat.format(transaction.buy.time)),
-                  buildKeyValuePair("持有天数", transaction.holdingDays()),
-                  buildKeyValuePair("年化率",
-                      "${toPercentage(transaction.annualizedRate(widget._currentPrice))}"),
-                  buildKeyValuePair("留存数量", transaction.retainedNumber()),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    return card;
-  }
 
   Future<void> _showMenu(LongPressStartDetails detail,
       GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
-    // RenderBox renderBox = cardGlobalKey.currentContext.findRenderObject();
-    // var offset = renderBox.localToGlobal(Offset(0.0, renderBox.size.height));
-    // return offset.dy;
-
     var findRenderObject =
         (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
     var dy = findRenderObject.localToGlobal(Offset.zero).dy;
@@ -317,9 +272,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
             }
             setState(() {
               date = _result;
-            });
-            setState(() {
-              date = _result;
               onChange(date);
               print(date);
             });
@@ -374,32 +326,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
         width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
   }
 
-
-  Widget buildLeading(Object value, {Color color = color2}) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-          gradient: LinearGradient(
-              colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
-          shape: BoxShape.circle,
-          boxShadow: [
-            //阴影
-            BoxShadow(
-                color: Colors.black54,
-                // offset: Offset(1.0, 1.0),
-                blurRadius: 0.1)
-          ]),
-      child: Container(
-        height: 40,
-        width: 40,
-        // padding: EdgeInsets.all(8),
-        child: Center(
-          child: Text(value.toString(),
-              textAlign: TextAlign.center,
-              maxLines: 1, style: TextStyle(color: color, fontSize: 12)),
-        ),
-      ),
-    );
-  }
 
   Expanded buildKeyValuePair(String title, Object value,
       {Color valueColor,
@@ -492,18 +418,32 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                 ));
               } else {
                 _showQuickSellDialog(context, quickOperate, false, (price, number) {
-                  Trade sell = Trade(id(), price, number, DateTime.now());
 
                   var ts = [];
                   ts.addAll(widget._variety.transactions);
                   ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
                   for (var transaction in ts) {
                     if (transaction.level == quickOperate.level && transaction.sell == null) {
-                      transaction.sell = sell;
+
+                      if(number > transaction.buy.number) {
+                        Fluttertoast.showToast(
+                            msg: "没那么多可以卖~",
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.CENTER,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 16.0
+                        );
+                        return false;
+                      }
+                      transaction.sell = Trade(id(), price, number, DateTime.now());
+                      break;
                     }
                   }
                   saveVariety(widget._variety);
                   widget.updateParentState();
+                  return true;
                 });
               }
 
@@ -528,6 +468,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                 widget._variety.transactions.add(twoDirectionTransactions);
                 saveVariety(widget._variety);
                 widget.updateParentState();
+                return true;
               });
             }
 
@@ -562,8 +503,9 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
             TextButton(
                 child: Text('确认'),
                 onPressed: () {
-                  onOkButton(_price, _number);
-                  Navigator.of(context).pop();
+                  if(onOkButton(_price, _number)) {
+                    Navigator.of(context).pop();
+                  }
                 }
             ),
           ],
