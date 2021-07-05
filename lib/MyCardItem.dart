@@ -68,7 +68,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
             context: context,
             barrierDismissible: true, // user must tap button!
             builder: (BuildContext context) {
-              return DeleteVarietyDialog("请输入 ${widget._variety.code}", (code) => code == widget._variety.code,
+              return DeleteVarietyDialog("${widget._variety.code}", (code) => code == widget._variety.code,
                   widget._remove);
             },
           );

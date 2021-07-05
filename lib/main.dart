@@ -9,6 +9,7 @@ import 'package:fishnet/widgets/DeleteVarietyDialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'GridTransactionList.dart';
@@ -118,7 +119,18 @@ class _VarietyCardListState extends State<VarietyCardList> {
             ),
           ),
         ),
+
       ),
+      localizationsDelegates: [
+        //此处 系统是什么语言就显示什么语言
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        //此处 系统是什么语言就显示什么语言
+        const Locale('zh', 'CH'),
+        const Locale('en', 'US'),
+      ],
     );
   }
 

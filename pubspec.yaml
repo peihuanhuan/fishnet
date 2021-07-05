@@ -28,8 +28,8 @@ dependencies:
   fluttertoast: ^8.0.7
   flutter_speed_dial: ^1.2.4
   shared_preferences:
-#  flutter_localizations:
-#    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 #  sqflite:
 #  path:
 #  auto_size_text: ^2.1.0

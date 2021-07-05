@@ -23,10 +23,11 @@ class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          numberFieldInputWidget("确认代码", (value) {
+
+          numberFieldInputWidget("代码", (value) {
             _code = value;
             checkClickable();
-          }, hintText: widget._hintTitle),
+          }, hintText: widget._hintTitle, helperText: "需要输入代码以确认删除"),
         ],
       ),
       actions: <Widget>[

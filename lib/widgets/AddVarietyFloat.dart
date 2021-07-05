@@ -58,9 +58,9 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
           numberFieldInputWidget("代码", (value) {
             _code = value;
             checkClickable();
-          }, maxLength: 6),
-          customFieldInputWidget(
-              "幅度",
+          }, maxLength: 6, helperText: "用于查询名称和净值"),
+          (
+              // "幅度",
               DropdownButton<int>(
                   value: (_mesh * 100).toInt(),
                   isExpanded: true,
@@ -77,10 +77,10 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
           numberFieldInputWidget("第一网份额", (value) {
             _firstNumber = value;
             checkClickable();
-          }),
+          },helperText: "请君自觉地输入100的倍数"),
           stringFieldInputWidget("标签", (value) {
             _tag = value;
-          }, defaultValue: _tag, hintText: "可选"),
+          }, defaultValue: _tag, hintText: "可选", helperText: "用于展示"),
         ],
       ),
       actions: <Widget>[
@@ -102,7 +102,7 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
 
   List<DropdownMenuItem<int>> items() {
     var items = [3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30];
-    return items.map((e) => DropdownMenuItem(value: e, child: Text('$e%'))).toList();
+    return items.map((e) => DropdownMenuItem(value: e, child: Text('幅度 $e%'))).toList();
   }
 
   void checkClickable() {

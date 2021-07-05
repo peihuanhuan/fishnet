@@ -27,9 +27,7 @@ class GridTransactionList extends StatefulWidget {
   }
 }
 
-
 CardColor cardColor = CardColorImpl2();
-
 
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
 DateFormat yyyy_MM_ddFormat = DateFormat("yyyy-MM-dd");
@@ -39,7 +37,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
   Variety _variety;
   num _currentPrice;
 
-
   _GridTransactionListState(this._currentPrice);
 
   @override
@@ -47,10 +44,9 @@ class _GridTransactionListState extends State<GridTransactionList> {
     updateParentState();
   }
 
-
   Future<void> updateParentState() async {
     _variety = await getByVarietyId(widget._varietyId);
-    if(_variety == null) {
+    if (_variety == null) {
       Fluttertoast.showToast(
           msg: "_variety为空， 内部错误",
           toastLength: Toast.LENGTH_LONG,
@@ -58,18 +54,13 @@ class _GridTransactionListState extends State<GridTransactionList> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.red,
           textColor: Colors.white,
-          fontSize: 16.0
-      );
+          fontSize: 16.0);
     }
     _transactions = _variety.transactions;
-    setState(() {
-    });
+    setState(() {});
   }
 
-
-
   Widget buildCardItem(int index) {
-
     var transaction = _transactions[index];
     var cardGlobalKey = GlobalKey();
 
@@ -90,45 +81,46 @@ class _GridTransactionListState extends State<GridTransactionList> {
   }
 
   List<Widget> buildChildrenWidget(TwoDirectionTransactions transaction) {
-    var list =  [
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(leftRightPadding, 12 ,12 ,6 ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                            colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          //阴影
-                          BoxShadow(
-                              color: Colors.black54,
-                              blurRadius: 0.1)
-                        ]),
-                    child: Container(
-                      height: 40,
-                      width: 40,
-                      // padding: EdgeInsets.all(8),
-                      child: Center(
-                        child: Text(transaction.level.toString(),
-                            textAlign: TextAlign.center,
-                            maxLines: 1, style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 12)),
-                      ),
-                    ),
-                  ),
+    var list = [
+      Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(leftRightPadding, 12, 12, 6),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    //阴影
+                    BoxShadow(color: Colors.black54, blurRadius: 0.1)
+                  ]),
+              child: Container(
+                height: 40,
+                width: 40,
+                // padding: EdgeInsets.all(8),
+                child: Center(
+                  child: Text(transaction.level.toString(),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 12)),
                 ),
-                buildKeyValuePair("收益（元）", transaction.totalProfit(widget._currentPrice).objToString(),titleSize: 11.0 ,valueSize: 16.0, valueColor: getMoneyColor(transaction.totalProfit(widget._currentPrice), cardColor))
-              ],
+              ),
             ),
-            buildFlex([
-              buildKeyValuePair("买入价格", transaction.buy.price, fractionDigits: 3),
-              buildKeyValuePair("买入份额", transaction.buy.number),
-              buildKeyValuePair("买入时间", yyyyMMddFormat.format(transaction.buy.time))
-            ]),
-          ];
+          ),
+          buildKeyValuePair("收益（元）", transaction.totalProfit(widget._currentPrice).objToString(),
+              titleSize: 11.0,
+              valueSize: 16.0,
+              valueColor: getMoneyColor(transaction.totalProfit(widget._currentPrice), cardColor))
+        ],
+      ),
+      buildFlex([
+        buildKeyValuePair("买入价格", transaction.buy.price, fractionDigits: 3),
+        buildKeyValuePair("买入份额", transaction.buy.number),
+        buildKeyValuePair("买入时间", yyyyMMddFormat.format(transaction.buy.time))
+      ]),
+    ];
 
-    if(transaction.sell != null) {
+    if (transaction.sell != null) {
       list.add(buildFlex([
         buildKeyValuePair("卖出价格", transaction.sell.price, fractionDigits: 3),
         buildKeyValuePair("卖出份额", transaction.sell.number),
@@ -145,20 +137,17 @@ class _GridTransactionListState extends State<GridTransactionList> {
     );
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     var child;
     if (_transactions.isEmpty) {
-        child =  Center(
-          child: Text(
-            "还没有数据哦",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: cardColor.lowEmphasisColor, fontSize: 12),
-          ),
-        );
+      child = Center(
+        child: Text(
+          "还没有数据哦",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: cardColor.lowEmphasisColor, fontSize: 12),
+        ),
+      );
     } else {
       child = Column(
         children: [
@@ -177,34 +166,43 @@ class _GridTransactionListState extends State<GridTransactionList> {
       );
     }
 
-    return MaterialApp(home: Scaffold(
+    return Scaffold(
       floatingActionButton: MyAddTradeFloat(_variety, _currentPrice, updateParentState),
       body: Container(
         color: cardColor.bgColor,
         child: child,
       ),
-    ),);
+    );
   }
 
-
-  Future<void> _showMenu(LongPressStartDetails detail,
-      GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
-    var findRenderObject =
-        (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
+  Future<void> _showMenu(
+      LongPressStartDetails detail, GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
+    var findRenderObject = (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
     var dy = findRenderObject.localToGlobal(Offset.zero).dy;
     var item = await showMenu(
         context: context,
-        position: RelativeRect.fromLTRB(
-            detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
+        position: RelativeRect.fromLTRB(detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
         items: <PopupMenuItem<String>>[
           new PopupMenuItem<String>(value: 'edit', child: new Text('编辑')),
           new PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
         ]);
     if (item == "edit") {
+
+      var transaction = _transactions[index];
+
+      var buyDefaultTime = transaction.buy.time;
+      var sellDefaultTime = transaction.sell?.time;
+
       showDialog(
           context: context,
           builder: (context) {
-            return _editorDialogBuilder(context, index);
+            return StatefulBuilder(
+              builder: (context, state) {
+                return _editorDialogBuilder(context, state, index,
+                    buyDefaultTime, (time) => buyDefaultTime = time,
+                    sellDefaultTime, (time) => sellDefaultTime = time);
+              },
+            );
           });
     }
     if (item == "remove") {
@@ -216,25 +214,38 @@ class _GridTransactionListState extends State<GridTransactionList> {
     }
   }
 
-  AlertDialog _editorDialogBuilder(BuildContext context, int index) {
+  AlertDialog _editorDialogBuilder(BuildContext context, Function state, int index,
+      DateTime buyDefaultTime, Function updateBuyDefaultTime,
+      DateTime sellDefaultTime,Function updateSellDefaultTime) {
     var transaction = _transactions[index];
 
     var buyNumber = transaction.buy.number;
     var buyPrice = transaction.buy.price;
-    var buyDate = transaction.buy.time;
-    var sellNumber = transaction.sell?.number;
+    var buyTime = buyDefaultTime;
     var sellPrice = transaction.sell?.price;
+    var sellNumber = transaction.sell?.number;
+    var sellTime = sellDefaultTime;
+
 
     var columnChildren = [
-      numberFieldInputWidget("买入价格",  (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
-      numberFieldInputWidget("买入份额",  (number) => buyNumber = number,  isPrice: true, defaultValue: buyNumber),
-
-      buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
+      numberFieldInputWidget("买入价格", (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
+      numberFieldInputWidget("买入份额", (number) => buyNumber = number, isPrice: true, defaultValue: buyNumber),
+      buildTimePicker(context, "买入时间", buyDefaultTime, (date) {
+        buyTime = date;
+        updateBuyDefaultTime(buyTime);
+        state(() {});
+      }),
     ];
 
     if (transaction.sell != null) {
-      columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price, isPrice: true, defaultValue: sellPrice, limit: 7));
+      columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price,
+          isPrice: true, defaultValue: sellPrice, limit: 7));
       columnChildren.add(numberFieldInputWidget("卖出份额", (number) => sellNumber = number, defaultValue: sellNumber));
+      columnChildren.add(buildTimePicker(context, "卖出时间", sellDefaultTime, (date) {
+        sellTime = date;
+        updateSellDefaultTime(sellTime);
+        state(() {});
+      }));
     }
 
     return AlertDialog(
@@ -252,18 +263,28 @@ class _GridTransactionListState extends State<GridTransactionList> {
           child: Text("确认"),
           onPressed: () {
             setState(() {
-              print(buyDate);
-              // todo 持久化
+              transaction.buy.price = buyPrice;
+              transaction.buy.number = buyNumber;
+              transaction.buy.time = buyTime;
+
+              if(transaction.sell != null) {
+                transaction.sell.price = sellPrice;
+                transaction.sell.number = sellNumber;
+                transaction.sell.time = sellTime;
+              }
+
+              _transactions[index] = transaction;
+              _variety.transactions = _transactions;
+              saveVariety(_variety);
             });
-            // Navigator.of(context).pop(true); //关闭对话框
+            Navigator.of(context).pop(true); //关闭对话框
           },
         ),
       ],
     );
   }
 
-  Widget buildTimePicker(
-      BuildContext context, String title, DateTime date, Function onChange) {
+  Widget buildTimePicker(BuildContext context, String title, DateTime date, Function onChange) {
     return customFieldInputWidget(
         title,
         InkWell(
@@ -279,17 +300,18 @@ class _GridTransactionListState extends State<GridTransactionList> {
             if (_result == null) {
               return;
             }
-            setState(() {
-              date = _result;
-              onChange(date);
-              print(date);
-            });
+            date = _result;
+            onChange(date);
           },
-          child: Text(yyyy_MM_ddFormat.format(date)),
+          child: Row(
+            children: [
+              Text(yyyy_MM_ddFormat.format(date)),
+              Icon(Icons.arrow_drop_down),
+              // Icon(Icons.date_range)
+            ],
+          ),
         ));
   }
-
-
 
   AlertDialog _deleteDialogBuilder(BuildContext context, int index) {
     return AlertDialog(
@@ -321,32 +343,22 @@ class _GridTransactionListState extends State<GridTransactionList> {
         buildKeyValuePair("买入", transaction.buy.price, fractionDigits: 3),
         buildKeyValuePair("份额", transaction.buy.number),
         div(),
-        buildKeyValuePair(
-            "卖出", transaction.sell == null ? "-" : transaction.sell.price,
-            fractionDigits: 3),
-        buildKeyValuePair(
-            "份额", transaction.sell == null ? "-" : transaction.sell.number)
+        buildKeyValuePair("卖出", transaction.sell == null ? "-" : transaction.sell.price, fractionDigits: 3),
+        buildKeyValuePair("份额", transaction.sell == null ? "-" : transaction.sell.number)
       ],
     );
   }
 
   Container div() {
-    return Container(
-        width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
+    return Container(width: 10, height: 30, child: VerticalDivider(color: Colors.grey));
   }
 
-
   Expanded buildKeyValuePair(String title, Object value,
-      {Color valueColor,
-        Color titleColor,
-        fractionDigits = 2,
-        titleSize = 12.0,
-        valueSize = 13.0}) {
-
-    if(valueColor == null) {
+      {Color valueColor, Color titleColor, fractionDigits = 2, titleSize = 12.0, valueSize = 13.0}) {
+    if (valueColor == null) {
       valueColor = cardColor.highEmphasisColor;
     }
-    if(titleColor == null) {
+    if (titleColor == null) {
       titleColor = cardColor.mediumEmphasisColor;
     }
     return Expanded(
@@ -379,13 +391,12 @@ class _GridTransactionListState extends State<GridTransactionList> {
 }
 
 class MyAddTradeFloat extends StatefulWidget {
-
   Variety _variety;
   num _currentPrice;
 
   Function updateParentState;
 
-  MyAddTradeFloat(this._variety,this._currentPrice, this.updateParentState);
+  MyAddTradeFloat(this._variety, this._currentPrice, this.updateParentState);
 
   @override
   _MyAddTradeFloatState createState() => _MyAddTradeFloatState();
@@ -396,47 +407,57 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
   Widget build(BuildContext context) {
     var textStyle = TextStyle(fontSize: 16);
     return SpeedDial(
-      marginRight: 25, //右边距
-      marginBottom: 50, //下边距
-      animatedIcon: AnimatedIcons.menu_close, //带动画的按钮
+      marginRight: 25,
+      //右边距
+      marginBottom: 50,
+      //下边距
+      animatedIcon: AnimatedIcons.menu_close,
+      //带动画的按钮
       animatedIconTheme: IconThemeData(size: 22.0),
-      visible: true, //是否显示按钮
-      closeManually: false, //是否在点击子按钮后关闭展开项
-      curve: Curves.bounceIn, //展开动画曲线
-      overlayColor: Colors.black, //遮罩层颜色
-      overlayOpacity: 0.5, //遮罩层透明度
+      visible: true,
+      //是否显示按钮
+      closeManually: false,
+      //是否在点击子按钮后关闭展开项
+      curve: Curves.bounceIn,
+      //展开动画曲线
+      overlayColor: Colors.black,
+      //遮罩层颜色
+      overlayOpacity: 0.5,
+      //遮罩层透明度
       // onOpen: () => print('OPENING DIAL'), //展开回调
       // onClose: () => print('DIAL CLOSED'), //关闭回调
       // tooltip: 'Speed Dial', //长按提示文字
       // heroTag: 'speed-dial-hero-tag', //hero标记
-      backgroundColor: Colors.blue, //按钮背景色
-      foregroundColor: Colors.white, //按钮前景色/文字色
-      elevation: 8.0, //阴影
-      shape: CircleBorder(), //shape修饰
-      children: [ //子按钮
+      backgroundColor: Colors.blue,
+      //按钮背景色
+      foregroundColor: Colors.white,
+      //按钮前景色/文字色
+      elevation: 8.0,
+      //阴影
+      shape: CircleBorder(),
+      //shape修饰
+      children: [
+        //子按钮
         SpeedDialChild(
             child: Icon(Icons.accessibility),
             backgroundColor: Colors.red,
             label: '快速卖出',
             labelStyle: textStyle,
             onTap: () {
-
               var quickOperate = widget._variety.quickOperate(false, widget._currentPrice);
 
-              if(quickOperate == null) {
+              if (quickOperate == null) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text("暂时没有可以卖出的了"),
                 ));
               } else {
                 _showQuickSellDialog(context, quickOperate, false, (price, number) {
-
                   var ts = [];
                   ts.addAll(widget._variety.transactions);
                   ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
                   for (var transaction in ts) {
                     if (transaction.level == quickOperate.level && transaction.sell == null) {
-
-                      if(number > transaction.buy.number) {
+                      if (number > transaction.buy.number) {
                         Fluttertoast.showToast(
                             msg: "没那么多可以卖~",
                             toastLength: Toast.LENGTH_LONG,
@@ -444,8 +465,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                             timeInSecForIosWeb: 1,
                             backgroundColor: Colors.red,
                             textColor: Colors.white,
-                            fontSize: 16.0
-                        );
+                            fontSize: 16.0);
                         return false;
                       }
                       transaction.sell = Trade(id(), price, number, DateTime.now());
@@ -464,10 +484,9 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
           label: '快速买入',
           labelStyle: textStyle,
           onTap: () {
-
             var quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
 
-            if(quickOperate == null) {
+            if (quickOperate == null) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text("你的网已经被击穿！"),
               ));
@@ -481,7 +500,6 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                 return true;
               });
             }
-
           },
         ),
       ],
@@ -492,19 +510,19 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
     num _price;
     num _number;
     var title = buy ? "买入" : "卖出";
-    return showDialog(
-      context: context,
-      barrierDismissible: true, // user must tap button!
-      builder: (BuildContext context) {
+
+    StatefulBuilder x = StatefulBuilder(
+      builder: (context, state) {
         return AlertDialog(
-        title: Text("快速$title，幅度：${priceNumber.level}"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            numberFieldInputWidget("$title价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price, limit: 7),
-            numberFieldInputWidget("$title份额", (num) => {_number = num}, defaultValue: priceNumber.number),
-          ],
-        ),
+          title: Text("快速$title，幅度：${priceNumber.level}"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              numberFieldInputWidget("$title价格", (price) => {_price = price},
+                  isPrice: true, defaultValue: priceNumber.price, limit: 7),
+              numberFieldInputWidget("$title份额", (num) => {_number = num}, defaultValue: priceNumber.number),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
               child: Text('取消'),
@@ -513,14 +531,19 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
             TextButton(
                 child: Text('确认'),
                 onPressed: () {
-                  if(onOkButton(_price, _number)) {
+                  if (onOkButton(_price, _number)) {
                     Navigator.of(context).pop();
                   }
-                }
-            ),
+                }),
           ],
-      );
+        );
       },
     );
+    return showDialog(
+        context: context,
+        barrierDismissible: true, // user must tap button!
+        builder: (context) {
+          return x;
+        });
   }
 }

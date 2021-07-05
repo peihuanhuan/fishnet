@@ -13,7 +13,6 @@ var cardShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(Radius.circular(24.0)),
 );
 
-
 Widget buildFlex(List<Expanded> expandeds) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(leftRightPadding, 3, leftRightPadding, 3),
@@ -23,7 +22,6 @@ Widget buildFlex(List<Expanded> expandeds) {
     ),
   );
 }
-
 
 Expanded buildKeyValuePair(String title, Object value,
     {Color titleColor, int flex = 1, Color valueColor, titleSize = 12.0, valueSize = 16.0}) {
@@ -47,7 +45,8 @@ Expanded buildKeyValuePair(String title, Object value,
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
-                child: new Text(value.objToString(), style: TextStyle(color: valueColor, fontSize: valueSize, fontWeight: FontWeight.bold)),
+                child: new Text(value.objToString(),
+                    style: TextStyle(color: valueColor, fontSize: valueSize, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -58,14 +57,18 @@ Expanded buildKeyValuePair(String title, Object value,
 }
 
 Widget numberFieldInputWidget(String title, Function onChange,
-    {int maxLength, bool isPrice = false, int limit = 8, hintText, num defaultValue}) {
+    {int maxLength, bool isPrice = false, int limit = 8, hintText, helperText, num defaultValue}) {
   if (defaultValue != null) {
     onChange(defaultValue);
   }
-  return customFieldInputWidget(
-      title,
+  return (
+      // title,
       TextField(
-        decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
+        decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12),
+          labelText: title,
+          helperText: helperText
+
+        ),
         controller: defaultValue == null ? null : (TextEditingController()..text = defaultValue.toString()),
         keyboardType: TextInputType.number,
         maxLength: maxLength,
@@ -82,14 +85,16 @@ Widget numberFieldInputWidget(String title, Function onChange,
       ));
 }
 
-Widget stringFieldInputWidget(String title, Function onChange, {int limit = 8, hintText, defaultValue = ""}) {
+Widget stringFieldInputWidget(String title, Function onChange, {int limit = 8,helperText, hintText, defaultValue = ""}) {
   if (defaultValue != null) {
     onChange(defaultValue);
   }
-  return customFieldInputWidget(
-      title,
+  return (
+      // title,
       TextField(
-        decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12)),
+        decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12),
+          labelText: title,
+        helperText: helperText),
         keyboardType: TextInputType.text,
         controller: TextEditingController()..text = defaultValue.toString(),
         inputFormatters: <TextInputFormatter>[
@@ -103,21 +108,22 @@ Widget stringFieldInputWidget(String title, Function onChange, {int limit = 8, h
 }
 
 Widget customFieldInputWidget(String title, Widget valueChild) {
-  return Flex(
-    direction: Axis.horizontal,
-    children: [
-      Expanded(
-        flex: 2,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(0, 8, 8, 0),
+    child: Flex(
+      direction: Axis.horizontal,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          flex: 2,
           child: Text(
             title + ":",
             style: TextStyle(fontSize: 14),
           ),
         ),
-      ),
-      Expanded(flex: 4, child: valueChild)
-    ],
+        Expanded(flex: 4, child: valueChild)
+      ],
+    ),
   );
 }
 
