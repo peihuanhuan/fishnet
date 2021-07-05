@@ -7,9 +7,10 @@ import 'Trade.dart';
 import 'TwoDirectionTransactions.dart';
 
 class Variety {
-  int id;
+  int _id;
 
-  // 代码
+  int get id => _id;
+
   String code;
 
   // 名字
@@ -26,7 +27,65 @@ class Variety {
   // 简短的标签，备注
   String tag;
 
-  PriceNumberPair quickOperate(bool buy) {
+  // 根据现价，预判 幅度
+  num predictCurrentLevel(num currentPrice) {
+    num level = 1;
+    if (currentPrice > (level + mesh / 2) * firstPrice) {
+      return 1;
+    }
+    while (level > 0) {
+      if (currentPrice > (level - mesh / 2) * firstPrice && currentPrice < (level + mesh / 2) * firstPrice) {
+        return level;
+      }
+      level = minusAccurately(level, mesh);
+    }
+    return addAccurately(level, mesh);
+  }
+
+  // 入参 currentPrice 不能为 0
+  PriceNumberPair buyOperateWithCurrentPrice(num currentPrice) {
+    var currentPriceLevel = predictCurrentLevel(currentPrice);
+    // todo 这里需要防御一下，如果不停地买，没有检测是否已经有这个幅度的 仓了
+    return calcPrice(currentPriceLevel, true);
+  }
+
+  // 入参 currentPrice 不能为 0
+  PriceNumberPair sellOperateWithCurrentPrice(num currentPrice) {
+    var currentPriceLevel = predictCurrentLevel(currentPrice);
+
+    // 寻找是否有可以卖的
+    List<TwoDirectionTransactions> ts = [];
+    for (var value in transactions) {
+      if (value.sell == null) {
+        ts.add(value);
+      }
+    }
+    // 后买的排在前面
+    ts.sort((a, b) => b.buy.time.compareTo(a.buy.time));
+
+    for (var v in ts) {
+      if (v.level < currentPriceLevel) {
+        // todo 警告用户，有sell 价格更低的，但是没有卖，咋回事
+      } else if (v.level == currentPriceLevel) {
+        return calcPrice(currentPriceLevel, false);
+      }
+    }
+    return null;
+  }
+
+  PriceNumberPair quickOperate(bool buy, num currentPrice) {
+    if(currentPrice == null) {
+      return quickOperateWithoutPrice(buy);
+    }
+
+    if(buy) {
+      return buyOperateWithCurrentPrice(currentPrice);
+    } else {
+      return sellOperateWithCurrentPrice(currentPrice);
+    }
+  }
+
+  PriceNumberPair quickOperateWithoutPrice(bool buy) {
     var lastOperateTime = DateTime.utc(0);
     TwoDirectionTransactions lastTransaction;
 
@@ -42,8 +101,7 @@ class Variety {
         lastOperateTime = transaction.buy.time;
         lastTransaction = transaction;
       }
-      if (transaction.sell != null &&
-          transaction.sell.time.isAfter(lastOperateTime)) {
+      if (transaction.sell != null && transaction.sell.time.isAfter(lastOperateTime)) {
         lastOperateTime = transaction.sell.time;
         lastTransaction = transaction;
       }
@@ -60,8 +118,8 @@ class Variety {
     if (buy) {
       if (lastTransaction.sell == null) {
         // 下个档位的 买点
-        var nextLevel = num.parse((Decimal.parse(lastTransaction.level.toString()) - Decimal.parse(mesh.toString())).toString());
-        if(nextLevel <= 0) {
+        var nextLevel = minusAccurately(lastTransaction.level, mesh);
+        if (nextLevel <= 0) {
           return null;
         }
         return calcPrice(nextLevel, buy);
@@ -76,7 +134,7 @@ class Variety {
         // 卖这个 档位的价钱
         return calcPrice(lastTransaction.level, buy);
       } else {
-        var lastLevel = num.parse((Decimal.parse(lastTransaction.level.toString()) + Decimal.parse(mesh.toString())).toString());
+        var lastLevel = addAccurately(lastTransaction.level, mesh);
 
         // 寻找是否有可以卖的
         var ts = [];
@@ -97,9 +155,9 @@ class Variety {
     var lastOperateTime = DateTime.utc(0);
     num price;
     int number;
-    if(buy) {
+    if (buy) {
       price = num.parse((firstPrice * level).toStringAsFixed(3));
-      number =  ((1 / level * firstNumber / 100).ceil() * 100).toInt();
+      number = ((1 / level * firstNumber / 100).ceil() * 100).toInt();
     } else {
       // 买的价格要多网格的网眼
       price = num.parse((firstPrice * (level + mesh)).toStringAsFixed(3));
@@ -126,16 +184,8 @@ class Variety {
       });
     }
 
-    return Variety(
-        json['id'],
-        json['code'],
-        json['name'],
-        json['mesh'],
-        json['firstPrice'],
-        json['firstNumber'],
-        json['tag'],
-        transactions,
-        DateTime.fromMillisecondsSinceEpoch(json['createTime']));
+    return Variety(json['id'], json['code'], json['name'], json['mesh'], json['firstPrice'], json['firstNumber'],
+        json['tag'], transactions, DateTime.fromMillisecondsSinceEpoch(json['createTime']));
   }
 
   Map<String, dynamic> toJson() {
@@ -156,47 +206,36 @@ class Variety {
     };
   }
 
-  Variety(this.id, this.code, this.name, this.mesh, this.firstPrice,
-      this.firstNumber, this.tag, this.transactions, this.createTime);
-
-
+  Variety(this._id, this.code, this.name, this.mesh, this.firstPrice, this.firstNumber, this.tag, this.transactions,
+      this.createTime);
 
   num totalCost() {
-    return transactions.map((e) => e.costAmount())
-        .fold(0, (curr, next) => curr + next);
+    return transactions.map((e) => e.costAmount()).fold(0, (curr, next) => curr + next);
   }
 
   num averageCost() {
     var totalNumber = retainedNumber();
 
-
-    if(totalNumber == 0) {
+    if (totalNumber == 0) {
       return NO_COST;
     }
     return totalCost() / totalNumber;
   }
 
   int retainedNumber() {
-    return transactions.map((e) => e.retainedNumber())
-        .fold(0, (curr, next) => curr + next);
+    return transactions.map((e) => e.retainedNumber()).fold(0, (curr, next) => curr + next);
   }
 
   num totalProfit(num currentPrice) {
-    return transactions
-        .map((e) => e.totalProfit(currentPrice))
-        .fold(0, (curr, next) => curr + next);
+    return transactions.map((e) => e.totalProfit(currentPrice)).fold(0, (curr, next) => curr + next);
   }
 
   num floatingProfit(num currentPrice) {
-    return transactions
-        .map((e) => e.floatingProfit(currentPrice))
-        .fold(0, (curr, next) => curr + next);
+    return transactions.map((e) => e.floatingProfit(currentPrice)).fold(0, (curr, next) => curr + next);
   }
 
   num realProfit() {
-    return transactions
-        .map((e) => e.realProfit())
-        .fold(0, (curr, next) => curr + next);
+    return transactions.map((e) => e.realProfit()).fold(0, (curr, next) => curr + next);
   }
 
   num annualizedRate() {
@@ -204,9 +243,7 @@ class Variety {
   }
 
   num holdingAmount(num currentPrice) {
-    return transactions
-        .map((e) => e.holdingAmount(currentPrice))
-        .fold(0, (curr, next) => curr + next);
+    return transactions.map((e) => e.holdingAmount(currentPrice)).fold(0, (curr, next) => curr + next);
   }
 
   int twoWayFrequency() {

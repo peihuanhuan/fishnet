@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:decimal/decimal.dart';
 import 'package:fishnet/colors/CardColor.dart';
 import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
@@ -13,6 +14,12 @@ int id() => DateTime.now().millisecondsSinceEpoch;
 
 const int NO_COST = 2^63 - 1;
 
+num addAccurately(num a, num b) {
+  return num.parse((Decimal.parse(a.toString()) + Decimal.parse(b.toString())).toString());
+}
+num minusAccurately(num a, num b) {
+  return num.parse((Decimal.parse(a.toString()) - Decimal.parse(b.toString())).toString());
+}
 
 Color getMoneyColor(num totalProfit, CardColor cardColor) {
   var color = cardColor.flatColor;
@@ -69,7 +76,7 @@ var httpClient = new HttpClient();
 Future<List<FoundPrice>> queryPrice(List<String> codes) async {
   var codesStr = codes.join(",");
   print('开始获取基金净值');
-  var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/price?codes=$codesStr"));
+  var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/fund/price?codes=$codesStr"));
   var response = await request.close();
   var responseBody = await response.transform(utf8.decoder).join();
   var decodeJson = json.decode(responseBody) as List;
@@ -79,8 +86,8 @@ Future<List<FoundPrice>> queryPrice(List<String> codes) async {
 
 Future<String> queryName(String code) async {
   try {
-    var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/name?code=$code"));
-    var response = await request.close().timeout(Duration(seconds: 3));
+    var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/fund/name?code=$code"));
+    var response = await request.close().timeout(Duration(seconds: 5));
     var responseBody = await response.transform(utf8.decoder).join();
     return responseBody;
   } on TimeoutException catch (_) {

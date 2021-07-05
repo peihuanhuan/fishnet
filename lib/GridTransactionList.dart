@@ -23,7 +23,7 @@ class GridTransactionList extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _GridTransactionListState();
+    return _GridTransactionListState(_currentPrice);
   }
 }
 
@@ -37,6 +37,11 @@ DateFormat yyyy_MM_ddFormat = DateFormat("yyyy-MM-dd");
 class _GridTransactionListState extends State<GridTransactionList> {
   var _transactions = <TwoDirectionTransactions>[];
   Variety _variety;
+  num _currentPrice;
+
+
+  _GridTransactionListState(this._currentPrice);
+
   @override
   void initState() {
     updateParentState();
@@ -118,7 +123,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
             ),
             buildFlex([
               buildKeyValuePair("买入价格", transaction.buy.price, fractionDigits: 3),
-              buildKeyValuePair("买入数量", transaction.buy.number),
+              buildKeyValuePair("买入份额", transaction.buy.number),
               buildKeyValuePair("买入时间", yyyyMMddFormat.format(transaction.buy.time))
             ]),
           ];
@@ -126,7 +131,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     if(transaction.sell != null) {
       list.add(buildFlex([
         buildKeyValuePair("卖出价格", transaction.sell.price, fractionDigits: 3),
-        buildKeyValuePair("卖出数量", transaction.sell.number),
+        buildKeyValuePair("卖出份额", transaction.sell.number),
         buildKeyValuePair("持有天数", transaction.holdingDays())
       ]));
     }
@@ -172,13 +177,13 @@ class _GridTransactionListState extends State<GridTransactionList> {
       );
     }
 
-    return Scaffold(
-      floatingActionButton: MyAddTradeFloat(_variety, updateParentState),
+    return MaterialApp(home: Scaffold(
+      floatingActionButton: MyAddTradeFloat(_variety, _currentPrice, updateParentState),
       body: Container(
         color: cardColor.bgColor,
         child: child,
       ),
-    );
+    ),);
   }
 
 
@@ -216,17 +221,20 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
     var buyNumber = transaction.buy.number;
     var buyPrice = transaction.buy.price;
+    var buyDate = transaction.buy.time;
     var sellNumber = transaction.sell?.number;
     var sellPrice = transaction.sell?.price;
 
     var columnChildren = [
-      numberFieldInputWidget("买入数量",  (number) => buyNumber = number,  isPrice: true, defaultValue: buyNumber),
-      // buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
+      numberFieldInputWidget("买入价格",  (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
+      numberFieldInputWidget("买入份额",  (number) => buyNumber = number,  isPrice: true, defaultValue: buyNumber),
+
+      buildTimePicker(context, "买入时间", buyDate, (date) => buyDate = date),
     ];
 
     if (transaction.sell != null) {
       columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price, isPrice: true, defaultValue: sellPrice, limit: 7));
-      columnChildren.add(numberFieldInputWidget("卖出数量", (number) => sellNumber = number, defaultValue: sellNumber));
+      columnChildren.add(numberFieldInputWidget("卖出份额", (number) => sellNumber = number, defaultValue: sellNumber));
     }
 
     return AlertDialog(
@@ -244,9 +252,10 @@ class _GridTransactionListState extends State<GridTransactionList> {
           child: Text("确认"),
           onPressed: () {
             setState(() {
+              print(buyDate);
               // todo 持久化
             });
-            Navigator.of(context).pop(true); //关闭对话框
+            // Navigator.of(context).pop(true); //关闭对话框
           },
         ),
       ],
@@ -310,13 +319,13 @@ class _GridTransactionListState extends State<GridTransactionList> {
       direction: Axis.horizontal,
       children: [
         buildKeyValuePair("买入", transaction.buy.price, fractionDigits: 3),
-        buildKeyValuePair("数量", transaction.buy.number),
+        buildKeyValuePair("份额", transaction.buy.number),
         div(),
         buildKeyValuePair(
             "卖出", transaction.sell == null ? "-" : transaction.sell.price,
             fractionDigits: 3),
         buildKeyValuePair(
-            "数量", transaction.sell == null ? "-" : transaction.sell.number)
+            "份额", transaction.sell == null ? "-" : transaction.sell.number)
       ],
     );
   }
@@ -372,9 +381,11 @@ class _GridTransactionListState extends State<GridTransactionList> {
 class MyAddTradeFloat extends StatefulWidget {
 
   Variety _variety;
+  num _currentPrice;
+
   Function updateParentState;
 
-  MyAddTradeFloat(this._variety, this.updateParentState);
+  MyAddTradeFloat(this._variety,this._currentPrice, this.updateParentState);
 
   @override
   _MyAddTradeFloatState createState() => _MyAddTradeFloatState();
@@ -410,7 +421,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
             labelStyle: textStyle,
             onTap: () {
 
-              var quickOperate = widget._variety.quickOperate(false);
+              var quickOperate = widget._variety.quickOperate(false, widget._currentPrice);
 
               if(quickOperate == null) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -446,7 +457,6 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                   return true;
                 });
               }
-
             }),
         SpeedDialChild(
           child: Icon(Icons.brush),
@@ -455,7 +465,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
           labelStyle: textStyle,
           onTap: () {
 
-            var quickOperate = widget._variety.quickOperate(true);
+            var quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
 
             if(quickOperate == null) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -487,12 +497,12 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
       barrierDismissible: true, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-        title: Text("快速$title 档位 ${priceNumber.level}"),
+        title: Text("快速$title，幅度：${priceNumber.level}"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             numberFieldInputWidget("$title价格", (price) => {_price = price}, isPrice: true, defaultValue: priceNumber.price, limit: 7),
-            numberFieldInputWidget("$title数量", (num) => {_number = num}, defaultValue: priceNumber.number),
+            numberFieldInputWidget("$title份额", (num) => {_number = num}, defaultValue: priceNumber.number),
           ],
         ),
           actions: <Widget>[

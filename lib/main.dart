@@ -23,18 +23,18 @@ CardColor cardColor = CardColorImpl2();
 
 
 void main() {
-  runApp(new AnimatedListSample());
+  runApp(new VarietyCardList());
 }
 
-class AnimatedListSample extends StatefulWidget {
+class VarietyCardList extends StatefulWidget {
   @override
-  _AnimatedListSampleState createState() => new _AnimatedListSampleState();
+  _VarietyCardListState createState() => new _VarietyCardListState();
 }
 
 num totalAmount = 0;
 var foundPriceMap = Map<String, FoundPrice>();
 
-class _AnimatedListSampleState extends State<AnimatedListSample> {
+class _VarietyCardListState extends State<VarietyCardList> {
   final GlobalKey<AnimatedListState> _listKey = new GlobalKey<AnimatedListState>();
   ListModel<Variety> _list;
 

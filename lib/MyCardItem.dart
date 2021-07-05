@@ -134,7 +134,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                 buildFlex([
                   buildKeyValuePair("持有金额", widget._variety.holdingAmount(widget._foundPrice.price).outlierDesc(0, "-"),
                       titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
-                  buildKeyValuePair("持有数量", widget._variety.retainedNumber(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                  buildKeyValuePair("持有份额", widget._variety.retainedNumber(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
                   buildKeyValuePair("波段次数", widget._variety.twoWayFrequency(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
                 ]),
                 buildFlex([

@@ -74,7 +74,7 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
             _firstPrice = value;
             checkClickable();
           }, isPrice: true, limit: 7),
-          numberFieldInputWidget("第一网数量", (value) {
+          numberFieldInputWidget("第一网份额", (value) {
             _firstNumber = value;
             checkClickable();
           }),
