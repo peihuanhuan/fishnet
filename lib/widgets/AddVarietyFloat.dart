@@ -58,7 +58,7 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
           numberFieldInputWidget("代码", (value) {
             _code = value;
             checkClickable();
-          }, maxLength: 6, helperText: "用于查询名称和净值"),
+          }, maxLength: 6, hintText: "用于查询名称和净值"),
           (
               // "幅度",
               DropdownButton<int>(
@@ -77,10 +77,10 @@ class _AddVarietyDialogState extends State<_AddVarietyDialog> {
           numberFieldInputWidget("第一网份额", (value) {
             _firstNumber = value;
             checkClickable();
-          },helperText: "请君自觉地输入100的倍数"),
+          }),
           stringFieldInputWidget("标签", (value) {
             _tag = value;
-          }, defaultValue: _tag, hintText: "可选", helperText: "用于展示"),
+          }, defaultValue: _tag, hintText: "可选"),
         ],
       ),
       actions: <Widget>[

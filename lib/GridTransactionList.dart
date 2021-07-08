@@ -1,3 +1,4 @@
+import 'package:fishnet/domain/dto/Operator.dart';
 import 'package:fishnet/domain/entity/Trade.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
 import 'package:fishnet/persistences/PersistenceLayer.dart';
@@ -47,14 +48,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
   Future<void> updateParentState() async {
     _variety = await getByVarietyId(widget._varietyId);
     if (_variety == null) {
-      Fluttertoast.showToast(
-          msg: "_variety为空， 内部错误",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      toast("_variety为空， 内部错误");
     }
     _transactions = _variety.transactions;
     setState(() {});
@@ -177,19 +171,26 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
   Future<void> _showMenu(
       LongPressStartDetails detail, GlobalKey<State<StatefulWidget>> cardGlobalKey, int index) async {
+    var transaction = _transactions[index];
+
+    List<PopupMenuEntry<String>> popupMenuItems = [];
+    if (transaction.sell == null) {
+      popupMenuItems.add(
+        PopupMenuItem<String>(value: 'sell', child: new Text('卖出')),
+      );
+    }
+    popupMenuItems.add(PopupMenuItem<String>(value: 'edit', child: new Text('编辑')));
+    popupMenuItems.add(
+      PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
+    );
+
     var findRenderObject = (cardGlobalKey.currentContext.findRenderObject() as RenderBox);
     var dy = findRenderObject.localToGlobal(Offset.zero).dy;
     var item = await showMenu(
         context: context,
         position: RelativeRect.fromLTRB(detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
-        items: <PopupMenuItem<String>>[
-          new PopupMenuItem<String>(value: 'edit', child: new Text('编辑')),
-          new PopupMenuItem<String>(value: 'remove', child: new Text('删除')),
-        ]);
+        items: popupMenuItems);
     if (item == "edit") {
-
-      var transaction = _transactions[index];
-
       var buyDefaultTime = transaction.buy.time;
       var sellDefaultTime = transaction.sell?.time;
 
@@ -198,8 +199,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
           builder: (context) {
             return StatefulBuilder(
               builder: (context, state) {
-                return _editorDialogBuilder(context, state, index,
-                    buyDefaultTime, (time) => buyDefaultTime = time,
+                return _editorDialogBuilder(context, state, index, buyDefaultTime, (time) => buyDefaultTime = time,
                     sellDefaultTime, (time) => sellDefaultTime = time);
               },
             );
@@ -212,11 +212,27 @@ class _GridTransactionListState extends State<GridTransactionList> {
             return _deleteDialogBuilder(context, index);
           });
     }
+
+    if (item == "sell") {
+      Operator quickOperate = Operator.success(_variety.calcPrice(transaction.level, false));
+      _showQuickOperateDialog(context, quickOperate, "卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
+        var ts = [];
+        ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
+
+        if (number > transaction.buy.number) {
+          toast("最多卖 ${transaction.buy.number} 份。");
+          return false;
+        }
+        transaction.sell = Trade(id(), price, number, DateTime.now());
+        saveVariety(_variety);
+        setState(() {});
+        return true;
+      });
+    }
   }
 
-  AlertDialog _editorDialogBuilder(BuildContext context, Function state, int index,
-      DateTime buyDefaultTime, Function updateBuyDefaultTime,
-      DateTime sellDefaultTime,Function updateSellDefaultTime) {
+  AlertDialog _editorDialogBuilder(BuildContext context, Function state, int index, DateTime buyDefaultTime,
+      Function updateBuyDefaultTime, DateTime sellDefaultTime, Function updateSellDefaultTime) {
     var transaction = _transactions[index];
 
     var buyNumber = transaction.buy.number;
@@ -225,7 +241,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var sellPrice = transaction.sell?.price;
     var sellNumber = transaction.sell?.number;
     var sellTime = sellDefaultTime;
-
 
     var columnChildren = [
       numberFieldInputWidget("买入价格", (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
@@ -262,19 +277,22 @@ class _GridTransactionListState extends State<GridTransactionList> {
         TextButton(
           child: Text("确认"),
           onPressed: () {
+            if (transaction.sell != null && transaction.sell.number > transaction.buy.number) {
+              toast("最多卖 ${transaction.buy.number} 份。");
+              return;
+            }
             setState(() {
               transaction.buy.price = buyPrice;
               transaction.buy.number = buyNumber;
               transaction.buy.time = buyTime;
 
-              if(transaction.sell != null) {
+              if (transaction.sell != null) {
                 transaction.sell.price = sellPrice;
                 transaction.sell.number = sellNumber;
                 transaction.sell.time = sellTime;
               }
 
               _transactions[index] = transaction;
-              _variety.transactions = _transactions;
               saveVariety(_variety);
             });
             Navigator.of(context).pop(true); //关闭对话框
@@ -326,8 +344,8 @@ class _GridTransactionListState extends State<GridTransactionList> {
           child: Text("删除"),
           onPressed: () {
             setState(() {
-              // todo 持久化
               _transactions.removeAt(index);
+              saveVariety(_variety);
             });
             Navigator.of(context).pop(true); //关闭对话框
           },
@@ -445,27 +463,17 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
             labelStyle: textStyle,
             onTap: () {
               var quickOperate = widget._variety.quickOperate(false, widget._currentPrice);
-
-              if (quickOperate == null) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text("暂时没有可以卖出的了"),
-                ));
+              if (!quickOperate.isSuccess()) {
+                toast(quickOperate.failMessage, long: true);
               } else {
-                _showQuickSellDialog(context, quickOperate, false, (price, number) {
+                _showQuickOperateDialog(context, quickOperate, "快速卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
                   var ts = [];
                   ts.addAll(widget._variety.transactions);
                   ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
                   for (var transaction in ts) {
-                    if (transaction.level == quickOperate.level && transaction.sell == null) {
+                    if (transaction.level == quickOperate.priceNumberPair.level && transaction.sell == null) {
                       if (number > transaction.buy.number) {
-                        Fluttertoast.showToast(
-                            msg: "没那么多可以卖~",
-                            toastLength: Toast.LENGTH_LONG,
-                            gravity: ToastGravity.CENTER,
-                            timeInSecForIosWeb: 1,
-                            backgroundColor: Colors.red,
-                            textColor: Colors.white,
-                            fontSize: 16.0);
+                        toast("最多卖 ${transaction.buy.number} 份。");
                         return false;
                       }
                       transaction.sell = Trade(id(), price, number, DateTime.now());
@@ -486,14 +494,41 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
           onTap: () {
             var quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
 
-            if (quickOperate == null) {
+            if (!quickOperate.isSuccess()) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text("你的网已经被击穿！"),
+                content: Text(quickOperate.failMessage),
               ));
             } else {
-              _showQuickSellDialog(context, quickOperate, true, (price, number) {
+              _showQuickOperateDialog(context, quickOperate, "快速买入，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
                 Trade buy = Trade(id(), price, number, DateTime.now());
-                var twoDirectionTransactions = TwoDirectionTransactions(id(), quickOperate.level, buy, null);
+                var twoDirectionTransactions =
+                    TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
+                widget._variety.transactions.add(twoDirectionTransactions);
+                saveVariety(widget._variety);
+                widget.updateParentState();
+                return true;
+              });
+            }
+          },
+        ),
+
+        SpeedDialChild(
+          child: Icon(Icons.brush),
+          backgroundColor: Colors.amber,
+          label: '自定义',
+          labelStyle: textStyle,
+          onTap: () {
+            Operator quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
+
+            if (!quickOperate.isSuccess()) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(quickOperate.failMessage),
+              ));
+            } else {
+              _showQuickOperateDialog(context, quickOperate, "自定义，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
+                Trade buy = Trade(id(), price, number, DateTime.now());
+                var twoDirectionTransactions =
+                    TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
                 widget._variety.transactions.add(twoDirectionTransactions);
                 saveVariety(widget._variety);
                 widget.updateParentState();
@@ -505,45 +540,56 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
       ],
     );
   }
+}
 
-  Future<void> _showQuickSellDialog(BuildContext context, PriceNumberPair priceNumber, bool buy, Function onOkButton) {
-    num _price;
-    num _number;
-    var title = buy ? "买入" : "卖出";
+Future<void> _showQuickOperateDialog(BuildContext context, Operator operator, String title, Function onOkButton) {
+  num _price;
+  num _number;
 
-    StatefulBuilder x = StatefulBuilder(
-      builder: (context, state) {
-        return AlertDialog(
-          title: Text("快速$title，幅度：${priceNumber.level}"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              numberFieldInputWidget("$title价格", (price) => {_price = price},
-                  isPrice: true, defaultValue: priceNumber.price, limit: 7),
-              numberFieldInputWidget("$title份额", (num) => {_number = num}, defaultValue: priceNumber.number),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(context).pop(),
+  PriceNumberPair priceNumber = operator.priceNumberPair;
+
+  StatefulBuilder x = StatefulBuilder(
+    builder: (context, state) {
+      return AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Offstage(
+              // 是否显示
+              offstage: operator.extraMessage == null,
+              child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Text(
+                    operator.extraMessage ?? "",
+                    style: TextStyle(fontSize: 12, color: Colors.red),
+                  )),
             ),
-            TextButton(
-                child: Text('确认'),
-                onPressed: () {
-                  if (onOkButton(_price, _number)) {
-                    Navigator.of(context).pop();
-                  }
-                }),
+            numberFieldInputWidget("$title价格", (price) => {_price = price},
+                isPrice: true, defaultValue: priceNumber.price, limit: 7),
+            numberFieldInputWidget("$title份额", (num) => {_number = num}, defaultValue: priceNumber.number),
           ],
-        );
-      },
-    );
-    return showDialog(
-        context: context,
-        barrierDismissible: true, // user must tap button!
-        builder: (context) {
-          return x;
-        });
-  }
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+              child: Text('确认'),
+              onPressed: () {
+                if (onOkButton(_price, _number)) {
+                  Navigator.of(context).pop();
+                }
+              }),
+        ],
+      );
+    },
+  );
+  return showDialog(
+      context: context,
+      barrierDismissible: true, // user must tap button!
+      builder: (context) {
+        return x;
+      });
 }

@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:fishnet/domain/dto/Operator.dart';
 import 'package:fishnet/domain/dto/PriceNumberPair.dart';
 import 'package:fishnet/main.dart';
 import 'package:fishnet/util/CommonUtils.dart';
@@ -43,15 +44,26 @@ class Variety {
   }
 
   // 入参 currentPrice 不能为 0
-  PriceNumberPair buyOperateWithCurrentPrice(num currentPrice) {
+  Operator buyOperateWithCurrentPrice(num currentPrice) {
     var currentPriceLevel = predictCurrentLevel(currentPrice);
-    // todo 这里需要防御一下，如果不停地买，没有检测是否已经有这个幅度的 仓了
-    return calcPrice(currentPriceLevel, true);
+
+    var price = calcPrice(currentPriceLevel, true);
+    for (var value in transactions) {
+      if(value.level == currentPriceLevel && value.sell == null) {
+          return Operator.success(price, extraMessage: "已买入一网尚未卖出，请注意。");
+      }
+    }
+
+    return Operator.success(price);
+
+
   }
 
   // 入参 currentPrice 不能为 0
-  PriceNumberPair sellOperateWithCurrentPrice(num currentPrice) {
+  Operator sellOperateWithCurrentPrice(num currentPrice) {
     var currentPriceLevel = predictCurrentLevel(currentPrice);
+
+    currentPriceLevel -= mesh;
 
     // 寻找是否有可以卖的
     List<TwoDirectionTransactions> ts = [];
@@ -63,18 +75,23 @@ class Variety {
     // 后买的排在前面
     ts.sort((a, b) => b.buy.time.compareTo(a.buy.time));
 
+    if(ts.isEmpty) {
+      return Operator.fail("没有尚未卖出的网。");
+    }
+
     for (var v in ts) {
+      var msg;
       if (v.level < currentPriceLevel) {
-        // todo 警告用户，有sell 价格更低的，但是没有卖，咋回事
+        msg = "有价格更低，但未卖出的网，请注意。";
       } else if (v.level == currentPriceLevel) {
-        return calcPrice(currentPriceLevel, false);
+        return Operator.success(calcPrice(currentPriceLevel, false), extraMessage: msg);
       }
     }
-    return null;
+    return Operator.fail("现在的价格，没有找到可以卖出的网。");
   }
 
-  PriceNumberPair quickOperate(bool buy, num currentPrice) {
-    if(currentPrice == null) {
+  Operator quickOperate(bool buy, num currentPrice) {
+    if(currentPrice == 0) {
       return quickOperateWithoutPrice(buy);
     }
 
@@ -85,15 +102,15 @@ class Variety {
     }
   }
 
-  PriceNumberPair quickOperateWithoutPrice(bool buy) {
+  Operator quickOperateWithoutPrice(bool buy) {
     var lastOperateTime = DateTime.utc(0);
     TwoDirectionTransactions lastTransaction;
 
     if (transactions.isEmpty) {
       if (buy) {
-        return PriceNumberPair(1, firstPrice, firstNumber);
+        return Operator.success(PriceNumberPair(1, firstPrice, firstNumber));
       } else {
-        return null;
+        return Operator.fail("没有买入记录");
       }
     }
     for (var transaction in transactions) {
@@ -107,14 +124,6 @@ class Variety {
       }
     }
 
-    if (lastTransaction == null) {
-      if (buy) {
-        return PriceNumberPair(1, firstPrice, firstNumber);
-      } else {
-        return null;
-      }
-    }
-
     if (buy) {
       if (lastTransaction.sell == null) {
         // 下个档位的 买点
@@ -122,18 +131,20 @@ class Variety {
         if (nextLevel <= 0) {
           return null;
         }
-        return calcPrice(nextLevel, buy);
+        return Operator.success(calcPrice(nextLevel, buy));
       } else {
         // 买这个档位的 价钱
-        return calcPrice(lastTransaction.level, buy);
+        return Operator.success(calcPrice(lastTransaction.level, buy));
       }
     }
 
     if (!buy) {
       if (lastTransaction.sell == null) {
         // 卖这个 档位的价钱
-        return calcPrice(lastTransaction.level, buy);
+        return Operator.success(calcPrice(lastTransaction.level, buy));
       } else {
+
+        // 还要再往上卖一个档位
         var lastLevel = addAccurately(lastTransaction.level, mesh);
 
         // 寻找是否有可以卖的
@@ -143,10 +154,10 @@ class Variety {
         ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
         for (var transaction in ts) {
           if (transaction.level == lastLevel && transaction.sell == null) {
-            return calcPrice(lastLevel, buy);
+            return Operator.success(calcPrice(lastLevel, buy));
           }
         }
-        return null;
+        return Operator.fail("都卖完了");
       }
     }
   }

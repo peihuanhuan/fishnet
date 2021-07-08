@@ -171,13 +171,7 @@ class _VarietyCardListState extends State<VarietyCardList> {
           var needDelete = item;
           _list.removeAt(index);
           deleteVariety(needDelete.id);
-          Fluttertoast.showToast(
-            backgroundColor: Colors.white,
-            textColor: Colors.black,
-            msg: "删除成功",
-            toastLength: Toast.LENGTH_SHORT,
-            fontSize: 14.0,
-          );
+          toast("删除成功");
         });
       },
 

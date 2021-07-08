@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'PrecisionLimitFormatter.dart';
 
@@ -12,6 +13,18 @@ const double leftRightPadding = 22;
 var cardShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(Radius.circular(24.0)),
 );
+
+
+void toast(String msg, {bool long = false}) {
+  Fluttertoast.showToast(
+      msg: msg,
+      toastLength: long ? Toast.LENGTH_LONG: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: long ? 5: 1,
+      backgroundColor: Color(0xff333333),
+      textColor: Color(0xffFCFCFC),
+      fontSize: 14.0);
+}
 
 Widget buildFlex(List<Expanded> expandeds) {
   return Padding(
