@@ -1,3 +1,4 @@
+import 'package:fishnet/EditTransaction.dart';
 import 'package:fishnet/domain/dto/Operator.dart';
 import 'package:fishnet/domain/entity/Trade.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
@@ -7,7 +8,6 @@ import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
 import 'colors/CardColor.dart';
@@ -28,7 +28,6 @@ class GridTransactionList extends StatefulWidget {
   }
 }
 
-CardColor cardColor = CardColorImpl2();
 
 DateFormat yyyyMMddFormat = DateFormat("yyyy.MM.dd");
 DateFormat yyyy_MM_ddFormat = DateFormat("yyyy-MM-dd");
@@ -64,12 +63,15 @@ class _GridTransactionListState extends State<GridTransactionList> {
       },
       child: Card(
           key: cardGlobalKey,
-          color: getBgColor(transaction.totalProfit(widget._currentPrice), cardColor),
+          color: getBgColor(transaction.totalProfit(widget._currentPrice), activeCardColor),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12.0)),
           ),
-          child: Column(
-            children: buildChildrenWidget(transaction),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0,0,0,15),
+            child: Column(
+              children: buildChildrenWidget(transaction),
+            ),
           )),
     );
   }
@@ -96,7 +98,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
                   child: Text(transaction.level.toString(),
                       textAlign: TextAlign.center,
                       maxLines: 1,
-                      style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 12)),
+                      style: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12)),
                 ),
               ),
             ),
@@ -104,7 +106,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
           buildKeyValuePair("收益（元）", transaction.totalProfit(widget._currentPrice).objToString(),
               titleSize: 11.0,
               valueSize: 16.0,
-              valueColor: getMoneyColor(transaction.totalProfit(widget._currentPrice), cardColor))
+              valueColor: getMoneyColor(transaction.totalProfit(widget._currentPrice), activeCardColor))
         ],
       ),
       buildFlex([
@@ -139,7 +141,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
         child: Text(
           "还没有数据哦",
           textAlign: TextAlign.center,
-          style: TextStyle(color: cardColor.lowEmphasisColor, fontSize: 12),
+          style: TextStyle(color: activeCardColor.lowEmphasisColor, fontSize: 12),
         ),
       );
     } else {
@@ -163,7 +165,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     return Scaffold(
       floatingActionButton: MyAddTradeFloat(_variety, _currentPrice, updateParentState),
       body: Container(
-        color: cardColor.bgColor,
+        color: activeCardColor.bgColor,
         child: child,
       ),
     );
@@ -215,7 +217,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
 
     if (item == "sell") {
       Operator quickOperate = Operator.success(_variety.calcPrice(transaction.level, false));
-      _showQuickOperateDialog(context, quickOperate, "卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
+      _showQuickOperateDialog(context, false, quickOperate, "卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
         var ts = [];
         ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
 
@@ -277,7 +279,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
         TextButton(
           child: Text("确认"),
           onPressed: () {
-            if (transaction.sell != null && transaction.sell.number > transaction.buy.number) {
+            if (transaction.sell != null && sellNumber > buyNumber) {
               toast("最多卖 ${transaction.buy.number} 份。");
               return;
             }
@@ -374,10 +376,10 @@ class _GridTransactionListState extends State<GridTransactionList> {
   Expanded buildKeyValuePair(String title, Object value,
       {Color valueColor, Color titleColor, fractionDigits = 2, titleSize = 12.0, valueSize = 13.0}) {
     if (valueColor == null) {
-      valueColor = cardColor.highEmphasisColor;
+      valueColor = activeCardColor.highEmphasisColor;
     }
     if (titleColor == null) {
-      titleColor = cardColor.mediumEmphasisColor;
+      titleColor = activeCardColor.mediumEmphasisColor;
     }
     return Expanded(
       flex: 1,
@@ -466,7 +468,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
               if (!quickOperate.isSuccess()) {
                 toast(quickOperate.failMessage, long: true);
               } else {
-                _showQuickOperateDialog(context, quickOperate, "快速卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
+                _showQuickOperateDialog(context, false, quickOperate, "快速卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
                   var ts = [];
                   ts.addAll(widget._variety.transactions);
                   ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
@@ -499,7 +501,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
                 content: Text(quickOperate.failMessage),
               ));
             } else {
-              _showQuickOperateDialog(context, quickOperate, "快速买入，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
+              _showQuickOperateDialog(context, true, quickOperate, "快速买入，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
                 Trade buy = Trade(id(), price, number, DateTime.now());
                 var twoDirectionTransactions =
                     TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
@@ -518,23 +520,35 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
           label: '自定义',
           labelStyle: textStyle,
           onTap: () {
-            Operator quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
 
-            if (!quickOperate.isSuccess()) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(quickOperate.failMessage),
-              ));
-            } else {
-              _showQuickOperateDialog(context, quickOperate, "自定义，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
-                Trade buy = Trade(id(), price, number, DateTime.now());
-                var twoDirectionTransactions =
-                    TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
-                widget._variety.transactions.add(twoDirectionTransactions);
-                saveVariety(widget._variety);
-                widget.updateParentState();
-                return true;
-              });
-            }
+
+            var quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
+
+
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              return EditTransaction(widget._variety, quickOperate);
+            })).then((value) {
+
+            });
+
+
+            // Operator quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
+            //
+            // if (!quickOperate.isSuccess()) {
+            //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            //     content: Text(quickOperate.failMessage),
+            //   ));
+            // } else {
+            //   _showQuickOperateDialog(context, true, quickOperate, "自定义，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
+            //     Trade buy = Trade(id(), price, number, DateTime.now());
+            //     var twoDirectionTransactions =
+            //         TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
+            //     widget._variety.transactions.add(twoDirectionTransactions);
+            //     saveVariety(widget._variety);
+            //     widget.updateParentState();
+            //     return true;
+            //   });
+            // }
           },
         ),
       ],
@@ -542,7 +556,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
   }
 }
 
-Future<void> _showQuickOperateDialog(BuildContext context, Operator operator, String title, Function onOkButton) {
+Future<void> _showQuickOperateDialog(BuildContext context, bool buy, Operator operator, String title, Function onOkButton) {
   num _price;
   num _number;
 
@@ -565,9 +579,9 @@ Future<void> _showQuickOperateDialog(BuildContext context, Operator operator, St
                     style: TextStyle(fontSize: 12, color: Colors.red),
                   )),
             ),
-            numberFieldInputWidget("$title价格", (price) => {_price = price},
+            numberFieldInputWidget("${buy?"买入":"卖出"}价格", (price) => {_price = price},
                 isPrice: true, defaultValue: priceNumber.price, limit: 7),
-            numberFieldInputWidget("$title份额", (num) => {_number = num}, defaultValue: priceNumber.number),
+            numberFieldInputWidget("${buy?"买入":"卖出"}份额", (num) => {_number = num}, defaultValue: priceNumber.number),
           ],
         ),
         actions: <Widget>[

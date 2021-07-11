@@ -15,7 +15,6 @@ import 'GridTransactionList.dart';
 import 'colors/CardColorImpl2.dart';
 import 'domain/entity/Variety.dart';
 
-CardColor cardColor = CardColorImpl2();
 
 class StatefulFoundCardItem extends StatefulWidget {
   Variety _variety;
@@ -89,7 +88,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
         padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
         child: Card(
           key: cardGlobalKey,
-            color: getBgColor(widget._variety.totalProfit(widget._foundPrice.price), cardColor),
+            color: getBgColor(widget._variety.totalProfit(widget._foundPrice.price), activeCardColor),
             shape: cardShape,
             child: Column(
               children: [
@@ -101,8 +100,8 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          new Text(widget._variety.name.isEmpty ? "-" : widget._variety.name, style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: cardColor.highEmphasisColor)),
-                          new Text(widget._variety.code, style: TextStyle(fontSize: 12, color: cardColor.mediumEmphasisColor)),
+                          new Text(widget._variety.name.isEmpty ? "-" : widget._variety.name, style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold, color: activeCardColor.highEmphasisColor)),
+                          new Text(widget._variety.code, style: TextStyle(fontSize: 12, color: activeCardColor.mediumEmphasisColor)),
                         ],
                       ),
                     ),
@@ -110,7 +109,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                       child: Container(
                         height: 50,
                         alignment: Alignment.bottomLeft,
-                        child: new Text(widget._variety.tag ?? "", style: TextStyle(fontSize: 12, color: cardColor.mediumEmphasisColor)),
+                        child: new Text(widget._variety.tag ?? "", style: TextStyle(fontSize: 12, color: activeCardColor.mediumEmphasisColor)),
                       ),
                     ),
                     Flexible(fit: FlexFit.tight, child: SizedBox()),
@@ -122,9 +121,9 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                           Padding(
                             // todo 靠左
                             padding: const EdgeInsets.only(top: 8.0, bottom: 2),
-                            child: Align(alignment: Alignment.centerLeft, child: new Text('占比', style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 10, ))),
+                            child: Align(alignment: Alignment.centerLeft, child: new Text('占比', style: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 10, ))),
                           ),
-                          Text(_buildPercentage(), style: TextStyle(color: cardColor.highEmphasisColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(_buildPercentage(), style: TextStyle(color: activeCardColor.highEmphasisColor, fontSize: 18, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -133,18 +132,18 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                 buildDivider(),
                 buildFlex([
                   buildKeyValuePair("持有金额", widget._variety.holdingAmount(widget._foundPrice.price).outlierDesc(0, "-"),
-                      titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
-                  buildKeyValuePair("持有份额", widget._variety.retainedNumber(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
-                  buildKeyValuePair("波段次数", widget._variety.twoWayFrequency(), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                      titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),
+                  buildKeyValuePair("持有份额", widget._variety.retainedNumber(), titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),
+                  buildKeyValuePair("波段次数", widget._variety.twoWayFrequency(), titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),
                 ]),
                 buildFlex([
                   widget._variety.averageCost() == NO_COST
-                      ? buildKeyValuePair("成本", "暂无", flex: 1, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.lowEmphasisColor, valueSize: 13.0)
-                      : buildKeyValuePair("成本", widget._variety.averageCost().objToString(3), flex: 1, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                      ? buildKeyValuePair("成本", "暂无", flex: 1, titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.lowEmphasisColor, valueSize: 13.0)
+                      : buildKeyValuePair("成本", widget._variety.averageCost().objToString(3), flex: 1, titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),
 
                   widget._foundPrice.price == 0
-                      ? buildKeyValuePair("现价", "暂无",flex: 2, valueSize: 13.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.lowEmphasisColor)
-                      : buildKeyValuePair("现价 (${_updateTimeStr()})", widget._foundPrice.price.toStringAsFixed(3),flex: 2, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
+                      ? buildKeyValuePair("现价", "暂无",flex: 2, valueSize: 13.0, titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.lowEmphasisColor)
+                      : buildKeyValuePair("现价 (${_updateTimeStr()})", widget._foundPrice.price.toStringAsFixed(3),flex: 2, titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),
                 ]),
                 buildDivider(),
                 Padding(
@@ -155,7 +154,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
                         padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
                         child: new Text(
                           '累计收益  ',
-                          style: TextStyle(color: cardColor.mediumEmphasisColor, fontSize: 12),
+                          style: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
                         ),
                       ),
                       buildTotalProfitText(),
@@ -170,7 +169,7 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
 
   Text buildTotalProfitText() {
     var totalProfit = widget._variety.totalProfit(widget._foundPrice.price);
-    Color color = getMoneyColor(totalProfit, cardColor);
+    Color color = getMoneyColor(totalProfit, activeCardColor);
     return Text(totalProfit.objToString(), style: TextStyle(color: color, fontSize: 16,fontWeight: FontWeight.bold),);
   }
 

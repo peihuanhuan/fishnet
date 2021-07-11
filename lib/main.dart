@@ -20,8 +20,6 @@ import 'domain/entity/Variety.dart';
 import 'persistences/PersistenceLayer.dart';
 
 
-CardColor cardColor = CardColorImpl2();
-
 
 void main() {
   runApp(new VarietyCardList());
@@ -85,7 +83,7 @@ class _VarietyCardListState extends State<VarietyCardList> {
   Widget build(BuildContext context) {
     return new MaterialApp(
       theme: ThemeData(
-        scaffoldBackgroundColor: cardColor.bgColor,
+        scaffoldBackgroundColor: activeCardColor.bgColor,
       ),
       home: new Scaffold(
         floatingActionButton: AddVarietyFloat(
@@ -143,7 +141,7 @@ class _VarietyCardListState extends State<VarietyCardList> {
     if(index == 1 && _list.length == 0) {
       return Padding(
         padding: const EdgeInsets.all(32.0),
-        child: Center(child: Text("不来一个？", style: TextStyle(fontSize: 13, color: cardColor.lowEmphasisColor),)),
+        child: Center(child: Text("不来一个？", style: TextStyle(fontSize: 13, color: activeCardColor.lowEmphasisColor),)),
       );
     }
 
@@ -284,16 +282,16 @@ class _HeaderState extends State<Header> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8.0)),
           ),
-          color: cardColor.flatBgColor,
+          color: activeCardColor.flatBgColor,
           child: Row(
             children: [
               Expanded(
                 child: Column(
                 children: [
-                  buildFlex([buildKeyValuePair("总资产（元）", totalAmount.toStringAsFixed(2), titleSize: 16.0, valueSize: 22.0, titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),]),
+                  buildFlex([buildKeyValuePair("总资产（元）", totalAmount.toStringAsFixed(2), titleSize: 16.0, valueSize: 22.0, titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),]),
                   buildFlex([
-                    buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2), titleColor: cardColor.mediumEmphasisColor, valueColor: cardColor.highEmphasisColor),
-                    buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), titleColor: cardColor.mediumEmphasisColor, valueColor: getMoneyColor(totalProfit, cardColor))
+                    buildKeyValuePair("净投入（元）", totalCost.toStringAsFixed(2), titleColor: activeCardColor.mediumEmphasisColor, valueColor: activeCardColor.highEmphasisColor),
+                    buildKeyValuePair("累计收益（元）", totalProfit.toStringAsFixed(2), titleColor: activeCardColor.mediumEmphasisColor, valueColor: getMoneyColor(totalProfit, activeCardColor))
                   ]),
                 ],
         ),

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:fishnet/colors/CardColorImpl2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'PrecisionLimitFormatter.dart';
+
+
+var activeCardColor = CardColorImpl2();
+
 
 const double leftRightPadding = 22;
 
@@ -80,7 +85,6 @@ Widget numberFieldInputWidget(String title, Function onChange,
         decoration: InputDecoration(hintText: hintText, hintStyle: TextStyle(fontSize: 12),
           labelText: title,
           helperText: helperText
-
         ),
         controller: defaultValue == null ? null : (TextEditingController()..text = defaultValue.toString()),
         keyboardType: TextInputType.number,
@@ -93,6 +97,8 @@ Widget numberFieldInputWidget(String title, Function onChange,
         onChanged: (str) {
           if (str.isNotEmpty) {
             onChange(num.parse(str));
+          } else {
+            onChange(0);
           }
         },
       ));
