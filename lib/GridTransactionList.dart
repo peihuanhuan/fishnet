@@ -216,20 +216,13 @@ class _GridTransactionListState extends State<GridTransactionList> {
     }
 
     if (item == "sell") {
-      Operator quickOperate = Operator.success(_variety.calcPrice(transaction.level, false));
-      _showQuickOperateDialog(context, false, quickOperate, "卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
-        var ts = [];
-        ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
 
-        if (number > transaction.buy.number) {
-          toast("最多卖 ${transaction.buy.number} 份。");
-          return false;
-        }
-        transaction.sell = Trade(id(), price, number, DateTime.now());
-        saveVariety(_variety);
-        setState(() {});
-        return true;
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return EditTransaction(_variety, widget._currentPrice, false, transaction.level);
+      })).then((value) {
+        updateParentState();
       });
+
     }
   }
 
@@ -461,96 +454,30 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
         SpeedDialChild(
             child: Icon(Icons.accessibility),
             backgroundColor: Colors.red,
-            label: '快速卖出',
+            label: '卖出',
             labelStyle: textStyle,
             onTap: () {
-              var quickOperate = widget._variety.quickOperate(false, widget._currentPrice);
-              if (!quickOperate.isSuccess()) {
-                toast(quickOperate.failMessage, long: true);
-              } else {
-                _showQuickOperateDialog(context, false, quickOperate, "快速卖出，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
-                  var ts = [];
-                  ts.addAll(widget._variety.transactions);
-                  ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
-                  for (var transaction in ts) {
-                    if (transaction.level == quickOperate.priceNumberPair.level && transaction.sell == null) {
-                      if (number > transaction.buy.number) {
-                        toast("最多卖 ${transaction.buy.number} 份。");
-                        return false;
-                      }
-                      transaction.sell = Trade(id(), price, number, DateTime.now());
-                      break;
-                    }
-                  }
-                  saveVariety(widget._variety);
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return EditTransaction(widget._variety, widget._currentPrice, false);
+              })).then((value) {
                   widget.updateParentState();
-                  return true;
-                });
+              });
               }
-            }),
+            ),
         SpeedDialChild(
           child: Icon(Icons.brush),
           backgroundColor: Colors.orange,
-          label: '快速买入',
+          label: '买入',
           labelStyle: textStyle,
           onTap: () {
-            var quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
-
-            if (!quickOperate.isSuccess()) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(quickOperate.failMessage),
-              ));
-            } else {
-              _showQuickOperateDialog(context, true, quickOperate, "快速买入，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
-                Trade buy = Trade(id(), price, number, DateTime.now());
-                var twoDirectionTransactions =
-                    TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
-                widget._variety.transactions.add(twoDirectionTransactions);
-                saveVariety(widget._variety);
-                widget.updateParentState();
-                return true;
-              });
-            }
-          },
-        ),
-
-        SpeedDialChild(
-          child: Icon(Icons.brush),
-          backgroundColor: Colors.amber,
-          label: '自定义',
-          labelStyle: textStyle,
-          onTap: () {
-
-
-            var quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
-
-
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return EditTransaction(widget._variety, quickOperate);
+              return EditTransaction(widget._variety, widget._currentPrice, true);
             })).then((value) {
-
+              widget.updateParentState();
             });
-
-
-            // Operator quickOperate = widget._variety.quickOperate(true, widget._currentPrice);
-            //
-            // if (!quickOperate.isSuccess()) {
-            //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            //     content: Text(quickOperate.failMessage),
-            //   ));
-            // } else {
-            //   _showQuickOperateDialog(context, true, quickOperate, "自定义，幅度：${quickOperate.priceNumberPair.level}", (price, number) {
-            //     Trade buy = Trade(id(), price, number, DateTime.now());
-            //     var twoDirectionTransactions =
-            //         TwoDirectionTransactions(id(), quickOperate.priceNumberPair.level, buy, null);
-            //     widget._variety.transactions.add(twoDirectionTransactions);
-            //     saveVariety(widget._variety);
-            //     widget.updateParentState();
-            //     return true;
-            //   });
-            // }
           },
         ),
+
       ],
     );
   }

@@ -43,27 +43,20 @@ class Variety {
     return addAccurately(level, mesh);
   }
 
-  // 入参 currentPrice 不能为 0
-  Operator buyOperateWithCurrentPrice(num currentPrice) {
-    var currentPriceLevel = predictCurrentLevel(currentPrice);
 
+  Operator buyOperateWithLevel(num currentPriceLevel) {
     var price = calcPrice(currentPriceLevel, true);
     for (var value in transactions) {
       if(value.level == currentPriceLevel && value.sell == null) {
-          return Operator.success(price, extraMessage: "已买入一网尚未卖出，请注意。");
+          return Operator.success(price, extraMessage: "已买入一网尚未卖出。");
       }
     }
 
     return Operator.success(price);
-
-
   }
 
-  // 入参 currentPrice 不能为 0
-  Operator sellOperateWithCurrentPrice(num currentPrice) {
-    var currentPriceLevel = predictCurrentLevel(currentPrice);
 
-    currentPriceLevel -= mesh;
+  Operator sellOperateWithLevel(num currentPriceLevel) {
 
     // 寻找是否有可以卖的
     List<TwoDirectionTransactions> ts = [];
@@ -95,10 +88,13 @@ class Variety {
       return quickOperateWithoutPrice(buy);
     }
 
+    var currentPriceLevel = predictCurrentLevel(currentPrice);
     if(buy) {
-      return buyOperateWithCurrentPrice(currentPrice);
+      return buyOperateWithLevel(currentPriceLevel);
     } else {
-      return sellOperateWithCurrentPrice(currentPrice);
+      currentPriceLevel -= mesh;
+
+      return sellOperateWithLevel(currentPriceLevel);
     }
   }
 
@@ -157,7 +153,9 @@ class Variety {
             return Operator.success(calcPrice(lastLevel, buy));
           }
         }
-        return Operator.fail("都卖完了");
+
+        // todo 如果 中间有个操作没被记录到，可能也没找到，因为是查询最后一次交易。
+        return Operator.fail("没找到可以卖的啦");
       }
     }
   }
