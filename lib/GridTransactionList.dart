@@ -1,4 +1,4 @@
-import 'package:fishnet/EditTransaction.dart';
+import 'package:fishnet/NewTransaction.dart';
 import 'package:fishnet/domain/dto/Operator.dart';
 import 'package:fishnet/domain/entity/Trade.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 
+import 'EditTransaction.dart';
 import 'colors/CardColor.dart';
 import 'colors/CardColorImpl1.dart';
 import 'colors/CardColorImpl2.dart';
@@ -57,6 +58,23 @@ class _GridTransactionListState extends State<GridTransactionList> {
     var transaction = _transactions[index];
     var cardGlobalKey = GlobalKey();
 
+    Widget child = Padding(
+      padding: const EdgeInsets.fromLTRB(0,0,0,15),
+      child: Column(
+        children: buildChildrenWidget(transaction),
+      ),
+    );
+    if(transaction.sell != null) {
+      child = ClipRect(
+        child: Banner(
+          message: "👍🏻",
+          location: BannerLocation.topEnd,
+          color: Colors.orange,
+          child: child,
+        ),
+      );
+    }
+
     return GestureDetector(
       onLongPressStart: (LongPressStartDetails detail) {
         _showMenu(detail, cardGlobalKey, index);
@@ -67,12 +85,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12.0)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0,0,0,15),
-            child: Column(
-              children: buildChildrenWidget(transaction),
-            ),
-          )),
+          child: child),
     );
   }
 
@@ -193,19 +206,23 @@ class _GridTransactionListState extends State<GridTransactionList> {
         position: RelativeRect.fromLTRB(detail.globalPosition.dx, dy, detail.globalPosition.dx, dy),
         items: popupMenuItems);
     if (item == "edit") {
-      var buyDefaultTime = transaction.buy.time;
-      var sellDefaultTime = transaction.sell?.time;
 
-      showDialog(
-          context: context,
-          builder: (context) {
-            return StatefulBuilder(
-              builder: (context, state) {
-                return _editorDialogBuilder(context, state, index, buyDefaultTime, (time) => buyDefaultTime = time,
-                    sellDefaultTime, (time) => sellDefaultTime = time);
-              },
-            );
-          });
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return EditTransaction(_variety, transaction);
+      })).then((value) {
+        updateParentState();
+      });
+
+      // showDialog(
+      //     context: context,
+      //     builder: (context) {
+      //       return StatefulBuilder(
+      //         builder: (context, state) {
+      //           return _editorDialogBuilder(context, state, index, buyDefaultTime, (time) => buyDefaultTime = time,
+      //               sellDefaultTime, (time) => sellDefaultTime = time);
+      //         },
+      //       );
+      //     });
     }
     if (item == "remove") {
       showDialog(
@@ -218,7 +235,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     if (item == "sell") {
 
       Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return EditTransaction(_variety, widget._currentPrice, false, transaction.level);
+        return NewTransaction(_variety, widget._currentPrice, false, transaction.level);
       })).then((value) {
         updateParentState();
       });
@@ -458,7 +475,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
             labelStyle: textStyle,
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return EditTransaction(widget._variety, widget._currentPrice, false);
+                  return NewTransaction(widget._variety, widget._currentPrice, false);
               })).then((value) {
                   widget.updateParentState();
               });
@@ -471,7 +488,7 @@ class _MyAddTradeFloatState extends State<MyAddTradeFloat> {
           labelStyle: textStyle,
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return EditTransaction(widget._variety, widget._currentPrice, true);
+              return NewTransaction(widget._variety, widget._currentPrice, true);
             })).then((value) {
               widget.updateParentState();
             });
