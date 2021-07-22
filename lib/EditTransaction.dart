@@ -60,17 +60,17 @@ class _EditTransactionState extends State<EditTransaction> {
           style: TextStyle(fontSize: 18),
         ),
       ),
-      buildPriceField(_buyPrice, (value) {
+      buildPriceField((value) {
         setStateIfNeed(_buyPrice, value);
         _buyPrice = value;
-      }),
+      }, isTop: true, defaultValue: getControllerText(_buyPrice)),
       buildDiv(),
-      buildNumberField(_buyNumber, (value) {
+      buildNumberField((value) {
         setStateIfNeed(_buyNumber, value);
         _buyNumber = value;
-      }),
+      },defaultValue: getControllerText(_buyNumber), ),
       buildDiv(),
-      buildDateField(_buyDate, (value) {
+      buildDateField(context, _buyDate, (value) {
         setState(() {
           _buyDate = value;
         });
@@ -86,18 +86,18 @@ class _EditTransactionState extends State<EditTransaction> {
             style: TextStyle(fontSize: 18),
           ),
         ),
-        buildPriceField(_sellPrice, (value) {
+        buildPriceField((value) {
           setStateIfNeed(_sellPrice, value);
           _sellPrice = value;
-        }),
+        }, isTop: true, defaultValue: getControllerText(_sellPrice)),
         buildDiv(),
         // todo 做下  卖的不能比买的多的校验
-        buildNumberField(_sellNumber, (value) {
+        buildNumberField((value) {
           setStateIfNeed(_sellNumber, value);
           _sellNumber = value;
-        }),
+        }, defaultValue: getControllerText(_sellNumber)),
         buildDiv(),
-        buildDateField(_sellDate, (value) {
+        buildDateField(context, _sellDate, (value) {
           setState(() {
             _sellDate = value;
           });
@@ -169,115 +169,12 @@ class _EditTransactionState extends State<EditTransaction> {
     }
   }
 
-  TextField buildDateField(DateTime initDate, Function onChange) {
-    return TextField(
-      onTap: () async {
-        var _result = await showDatePicker(
-          context: context,
-          currentDate: DateTime.now(),
-          initialDate: initDate,
-          firstDate: DateTime(2015),
-          lastDate: DateTime.now(),
-          locale: Locale('zh'),
-        );
-        if (_result != null) {
-          onChange(_result);
-        }
-      },
-      textAlign: TextAlign.right,
-      controller: (TextEditingController()
-        ..text = (initDate.difference(DateTime.now()).inDays == 0 ? "今天" : DateFormat("yyyy-MM-dd").format(initDate))),
-      onChanged: (value) {
-        setState(() {});
-      },
-      readOnly: true,
-      showCursor: false,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        prefixText: "日期",
-        prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-        labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        border: UnderlineInputBorder(
-            borderRadius: BorderRadius.only(bottomRight: Radius.circular(8), bottomLeft: Radius.circular(8)),
-            borderSide: BorderSide.none),
-      ),
-    );
-  }
 
-  TextField buildPriceField(num defaultValue, Function function) {
-    return TextField(
-      onChanged: (str) {
-        if (str.isNotEmpty) {
-          function(num.parse(str));
-        } else {
-          function(-1);
-        }
-      },
-      textAlign: TextAlign.right,
-      inputFormatters: <TextInputFormatter>[
-        PrecisionLimitFormatter(3),
-        LengthLimitingTextInputFormatter(8),
-        FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
-      ],
-      controller: TextEditingController.fromValue(TextEditingValue(
-          text: getControllerText(defaultValue),
-          // 保持光标在最后
-          selection: TextSelection.fromPosition(TextPosition(
-              affinity: TextAffinity.downstream, offset: getControllerText(defaultValue).length)))),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        prefixText: "价格",
-        labelText: "价格",
-        prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-        labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        border: UnderlineInputBorder(
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(0), topRight: Radius.circular(0)),
-            borderSide: BorderSide.none),
-      ),
-    );
-  }
+
+
 
   String getControllerText(num defaultValue) => defaultValue == -1 ? "" :  (defaultValue == 0 ? "0" : defaultValue.toString());
 
-  TextField buildNumberField(num defaultValue, Function function) {
-    return TextField(
-        onChanged: (str) {
-          if (str.isNotEmpty) {
-            function(num.parse(str));
-          } else {
-            function(-1);
-          }
-        },
-        textAlign: TextAlign.right,
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(8),
-          FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
-        ],
-        controller: TextEditingController.fromValue(TextEditingValue(
-            text: getControllerText(defaultValue),
-            // 保持光标在最后
-            selection: TextSelection.fromPosition(TextPosition(
-                affinity: TextAffinity.downstream,
-                offset: getControllerText(defaultValue).length)))),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          prefixText: "数量",
-          labelText: "数量",
-          floatingLabelBehavior: FloatingLabelBehavior.never,
-          labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-          prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-          hintText: "输入100的倍数",
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(0), bottomRight: Radius.circular(0)),
-              borderSide: BorderSide.none),
-        ));
-  }
 
   void setStateIfNeed(num a, num b) {
     if(a == b) {

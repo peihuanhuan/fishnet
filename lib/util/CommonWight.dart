@@ -6,6 +6,7 @@ import 'package:fishnet/util/CommonUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 
 import 'PrecisionLimitFormatter.dart';
 
@@ -30,6 +31,174 @@ void toast(String msg, {bool long = false}) {
       textColor: Color(0xffFCFCFC),
       fontSize: 14.0);
 }
+
+
+TextField buildNumberField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "数量", int maxLength = 8, hintText = "输入100的倍数"}) {
+  return TextField(
+      onChanged: (str) {
+        if (str.isNotEmpty) {
+          function(num.parse(str));
+        } else {
+          function(-1);
+        }
+      },
+      textAlign: TextAlign.right,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(maxLength),
+        FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
+      ],
+      controller: defaultValue == null ? null : TextEditingController.fromValue(TextEditingValue(
+          text: defaultValue,
+          // 保持光标在最后
+          selection: TextSelection.fromPosition(TextPosition(
+              affinity: TextAffinity.downstream, offset: defaultValue.length)))),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        prefixText: title,
+        labelText: title,
+        alignLabelWithHint: true,
+        floatingLabelBehavior: FloatingLabelBehavior.never,
+        labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+        prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+        hintText: hintText,
+        border: OutlineInputBorder(
+            borderRadius: borderRadius(isTop, isBottom),
+            borderSide: BorderSide.none),
+      ));
+}
+
+
+Container buildDiv() {
+  return Container(
+      color: Colors.white,
+      child: Container(
+        margin: EdgeInsets.only(left: 12.0, right: 12.0),
+        color: activeCardColor.lowEmphasisColor,
+        height: 0.2,
+      ));
+}
+
+
+TextField buildPriceField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格"}) {
+  return TextField(
+    onChanged: (str) {
+      if (str.isNotEmpty) {
+        function(num.parse(str));
+      } else {
+        function(-1);
+      }
+    },
+    textAlign: TextAlign.right,
+    inputFormatters: <TextInputFormatter>[
+      PrecisionLimitFormatter(3),
+      LengthLimitingTextInputFormatter(8),
+      FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
+    ],
+    controller: defaultValue == null ? null : TextEditingController.fromValue(TextEditingValue(
+        text: defaultValue,
+        // 保持光标在最后
+        selection: TextSelection.fromPosition(TextPosition(
+            affinity: TextAffinity.downstream, offset: defaultValue.length)))),
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: title,
+      labelText: title,
+      alignLabelWithHint: true,
+      floatingLabelBehavior: FloatingLabelBehavior.never,
+      prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+      labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+      border: OutlineInputBorder(
+          borderRadius: borderRadius(isTop, isBottom),
+          borderSide: BorderSide.none),
+    ),
+  );
+}
+
+TextField buildStringField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格"}) {
+  return TextField(
+    onChanged: (str) {
+        function(str);
+    },
+    textAlign: TextAlign.right,
+    inputFormatters: <TextInputFormatter>[
+      LengthLimitingTextInputFormatter(10),
+    ],
+    controller: defaultValue == null ? null : TextEditingController.fromValue(TextEditingValue(
+        text: defaultValue,
+        // 保持光标在最后
+        selection: TextSelection.fromPosition(TextPosition(
+            affinity: TextAffinity.downstream, offset: defaultValue.length)))),
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: title,
+      labelText: title,
+      alignLabelWithHint: true,
+      prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+      labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+      floatingLabelBehavior: FloatingLabelBehavior.never,
+      border: OutlineInputBorder(
+          borderRadius: borderRadius(isTop, isBottom),
+          borderSide: BorderSide.none),
+    ),
+  );
+}
+
+BorderRadius borderRadius(bool isTop, bool isBottom) {
+  double value = 8;
+  Radius top;
+  Radius bottom;
+  if(isTop) {
+    top = Radius.circular(value);
+  } else {
+    top = Radius.zero;
+  }
+
+  if(isBottom) {
+    bottom = Radius.circular(value);
+  } else {
+    bottom = Radius.zero;
+  }
+  return BorderRadius.vertical(top: top, bottom: bottom);
+}
+
+TextField buildDateField(BuildContext context, DateTime initDate, Function onChange) {
+  return TextField(
+    onTap: () async {
+      var _result = await showDatePicker(
+        context: context,
+        currentDate: DateTime.now(),
+        initialDate: initDate,
+        firstDate: DateTime(2015),
+        lastDate: DateTime.now(),
+        locale: Locale('zh'),
+      );
+      if (_result != null) {
+        onChange(_result);
+      }
+    },
+    textAlign: TextAlign.right,
+    controller: (TextEditingController()
+      ..text = (initDate.difference(DateTime.now()).inDays == 0 ? "今天" : DateFormat("yyyy-MM-dd").format(initDate))),
+    readOnly: true,
+    showCursor: false,
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      prefixText: "日期",
+      prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+      labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+      floatingLabelBehavior: FloatingLabelBehavior.never,
+      border: UnderlineInputBorder(
+          borderRadius: BorderRadius.only(bottomRight: Radius.circular(8), bottomLeft: Radius.circular(8)),
+          borderSide: BorderSide.none),
+    ),
+  );
+}
+
 
 Widget buildFlex(List<Expanded> expandeds) {
   return Padding(

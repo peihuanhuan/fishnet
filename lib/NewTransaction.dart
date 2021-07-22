@@ -55,6 +55,9 @@ class _NewTransactionState extends State<NewTransaction> {
       _selectedOperator = selectedOperator;
     }
     _selectedLevel = _selectedOperator.priceNumberPair?.level;
+
+    _price = _selectedOperator.priceNumberPair.price;
+    _number = _selectedOperator.priceNumberPair.number;
   }
 
   @override
@@ -64,9 +67,6 @@ class _NewTransactionState extends State<NewTransaction> {
       Navigator.pop(context);
       return Container();
     }
-
-    _price = _selectedOperator.priceNumberPair.price;
-    _number = _selectedOperator.priceNumberPair.number;
 
     PriceNumberPair priceNumber = _shouldOperator.priceNumberPair;
 
@@ -108,121 +108,35 @@ class _NewTransactionState extends State<NewTransaction> {
                 filled: true,
                 prefixText: "幅度 ",
                 labelText: "幅度 ",
+                labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
+                prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
                 fillColor: Colors.white,
                 floatingLabelBehavior: FloatingLabelBehavior.never,
-                prefixStyle: TextStyle(fontSize: 14),
-                labelStyle: TextStyle(fontSize: 14),
                 border: UnderlineInputBorder(
                     borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
                     borderSide: BorderSide.none),
               ),
             ),
             buildDiv(),
-            TextField(
-              onChanged: (str) {
-                if (str.isNotEmpty) {
-                  _price = num.parse(str);
-                } else {
-                  _price = 0;
-                  setState(() {
-                    _selectedOperator.priceNumberPair.price = 0;
-                  });
-                }
-              },
-              textAlign: TextAlign.right,
-              inputFormatters: <TextInputFormatter>[
-                PrecisionLimitFormatter(3),
-                LengthLimitingTextInputFormatter(8),
-                FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
-              ],
-              controller: (TextEditingController()..text = _selectedOperator.priceNumberPair.price == 0 ? "0" : _selectedOperator.priceNumberPair.price.toStringAsFixed(3)),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                prefixText: "价格",
-                // labelText: "价格",
-                prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                border: UnderlineInputBorder(
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(0), topRight: Radius.circular(0)),
-                    borderSide: BorderSide.none),
-              ),
-            ),
-            buildDiv(),
-            TextField(
-                onChanged: (str) {
-                  if (str.isNotEmpty) {
-                    _number = num.parse(str);
-                  } else {
-                    _number = 0;
-                    setState(() {
-                      _selectedOperator.priceNumberPair.number = 0;
-                    });
-                  }
-                },
-                textAlign: TextAlign.right,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(8),
-                  FilteringTextInputFormatter(RegExp("[0-9.]"), allow: true),
-                ],
-                controller: (TextEditingController()
-                  ..text = _selectedOperator.priceNumberPair.number.toString()),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixText: "数量",
-                  // labelText: "数量",
-                  floatingLabelBehavior: FloatingLabelBehavior.never,
-                  labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                  prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                  hintText: "输入100的倍数",
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(0), bottomRight: Radius.circular(0)),
-                      borderSide: BorderSide.none),
-                )),
-            buildDiv(),
-            TextField(
-              onTap: () async {
-                var _result = await showDatePicker(
-                  context: context,
-                  currentDate: DateTime.now(),
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2015),
-                  lastDate: DateTime.now(),
-                  locale: Locale('zh'),
-                );
-                if (_result == null) {
-                  return;
-                }
 
-                setState(() {
-                  _date = _result;
-                });
-              },
-              textAlign: TextAlign.right,
-              controller: (TextEditingController()
-                ..text = (_date.difference(DateTime.now()).inDays == 0 ? "今天" : DateFormat("yyyy-MM-dd").format(_date))),
-              onChanged: (value) {
-                setState(() {});
-              },
-              readOnly: true,
-              showCursor: false,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                prefixText: "日期",
-                // labelText: "日期",
-                // suffixIcon: Icon(Icons.chevron_right, color: Colors.grey,),
-                prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                border: UnderlineInputBorder(
-                    borderRadius: BorderRadius.only(bottomRight: Radius.circular(8), bottomLeft: Radius.circular(8)),
-                    borderSide: BorderSide.none),
-              ),
-            ),
+            buildPriceField((value) {
+              setStateIfNeed(_price, value);
+              _price = value;
+            }, defaultValue: getControllerText(_price), ),
+            buildDiv(),
+
+            buildNumberField((value) {
+              setStateIfNeed(_number, value);
+              _number = value;
+            }, defaultValue: getControllerText(_number)),
+            buildDiv(),
+
+            buildDateField(context, _date, (value) {
+              setState(() {
+                _date = value;
+              });
+            }),
+
             Padding(
               padding: const EdgeInsets.only(top: 3.0, bottom: 8),
               child: Row(
@@ -261,8 +175,7 @@ class _NewTransactionState extends State<NewTransaction> {
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 32),
               child: MaterialButton(
-                // C8DFF3  disabled
-                onPressed: () {
+                onPressed: !checkEnable() ? null : (){
                   if (widget._buy) {
                     Trade buy = Trade(id(), _price, _number, DateTime.now());
                     var twoDirectionTransactions =
@@ -291,6 +204,7 @@ class _NewTransactionState extends State<NewTransaction> {
                 minWidth: double.infinity,
                 height: 45,
                 color: Color(0xff279EF8),
+                disabledColor: Color(0xFFC8DFF3),
                 textColor: Colors.white,
                 child: Text("确认操作"),
                 shape:
@@ -303,15 +217,23 @@ class _NewTransactionState extends State<NewTransaction> {
     );
   }
 
-  Container buildDiv() {
-    return Container(
-        color: Colors.white,
-        child: Container(
-          margin: EdgeInsets.only(left: 12.0, right: 12.0),
-          color: activeCardColor.lowEmphasisColor,
-          height: 0.2,
-        ));
+  String getControllerText(num defaultValue) => defaultValue == -1 ? "" :  (defaultValue == 0 ? "0" : defaultValue.toString());
+
+  bool checkEnable() {
+      return _number > 0 && _price > 0;
   }
+
+  void setStateIfNeed(num a, num b) {
+    if(a == b) {
+      return;
+    }
+    if (a * b <= 0) {
+      // 边沿触发
+      setState(() {});
+    }
+  }
+
+
 
   List<DropdownMenuItem<double>> sellItems() {
     Set<double> items = HashSet();

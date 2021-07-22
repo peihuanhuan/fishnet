@@ -1,6 +1,8 @@
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/material.dart';
 
+import '../NewVariety.dart';
+
 class AddVarietyFloat extends StatefulWidget {
   Function _insert;
   Function _checkOkButtonEnable;
@@ -16,7 +18,14 @@ class _AddVarietyFloatState extends State<AddVarietyFloat> {
   Widget build(BuildContext context) {
     return new FloatingActionButton(
         child: Icon(Icons.add, color: Colors.black, size: 40),
-        onPressed: () => _showMyDialog(context),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return NewVariety(widget._insert);
+          })).then((value) {
+            setState(() {});
+          });
+          // return _showMyDialog(context);
+        },
         backgroundColor: Color(0xFFFFD103));
   }
 

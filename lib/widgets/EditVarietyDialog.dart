@@ -43,11 +43,7 @@ class _EditVarietyDialogStatefulWidget extends State<EditVarietyDialog> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         TextButton(
-            child: Row(
-              children: [
-                Text('确认'),
-              ],
-            ),
+            child: Text('确认'),
             onPressed: onOkPressed(context)),
       ],
     );

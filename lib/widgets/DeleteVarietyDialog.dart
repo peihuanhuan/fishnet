@@ -36,11 +36,7 @@ class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialog> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         TextButton(
-            child: Row(
-              children: [
-                Text('确认'),
-              ],
-            ),
+            child: Text('确认'),
             onPressed: onOkPressed(context)),
       ],
     );
