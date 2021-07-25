@@ -80,7 +80,7 @@ class Variety {
         return Operator.success(calcPrice(currentPriceLevel, false), extraMessage: msg);
       }
     }
-    return Operator.fail("现在的价格，没有找到可以卖出的网。");
+    return Operator.fail("现在的价格，没有匹配到可以卖出的网。");
   }
 
   Operator quickOperate(bool buy, num currentPrice) {

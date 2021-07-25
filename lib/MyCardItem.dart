@@ -1,18 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fishnet/colors/CardColor.dart';
-import 'package:fishnet/colors/CardColorImpl1.dart';
 import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/util/CommonUtils.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:fishnet/widgets/DeleteVarietyDialog.dart';
-import 'package:fishnet/widgets/EditVarietyDialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'GridTransactionList.dart';
-import 'colors/CardColorImpl2.dart';
+import 'EditVariety.dart';
 import 'domain/entity/Variety.dart';
 
 
@@ -74,13 +70,11 @@ class _FoundCardItem extends State<StatefulFoundCardItem> {
         }
 
         if(v == "edit") {
-          showDialog(
-            context: context,
-            barrierDismissible: true, // user must tap button!
-            builder: (BuildContext context) {
-              return EditVarietyDialog(widget._variety.name, widget._variety.tag, (name, tag) {widget._edit(name, tag);});
-            },
-          );
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return EditVariety(widget._variety);
+          })).then((value) {
+            setState(() {});
+          });
         }
 
       },

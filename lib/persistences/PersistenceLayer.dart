@@ -168,4 +168,9 @@ Future<void> saveVariety(Variety needUpdateVariety) async {
   prefs.setStringList('varieties', list);
 }
 
+Future<void> saveVarieties(List<Variety> varieties) async {
+  final prefs = await SharedPreferences.getInstance();
 
+  var list = varieties.map((e) => json.encoder.convert(e)).toList();
+  prefs.setStringList('varieties', list);
+}

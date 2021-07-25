@@ -33,7 +33,7 @@ void toast(String msg, {bool long = false}) {
 }
 
 
-TextField buildNumberField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "数量", int maxLength = 8, hintText = "输入100的倍数"}) {
+TextField buildNumberField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "数量", int maxLength = 8, hintText = "输入100的倍数", readOnly = false}) {
   return TextField(
       onChanged: (str) {
         if (str.isNotEmpty) {
@@ -42,6 +42,7 @@ TextField buildNumberField(Function function, {isTop = false, isBottom = false, 
           function(-1);
         }
       },
+      readOnly: readOnly,
       textAlign: TextAlign.right,
       inputFormatters: <TextInputFormatter>[
         FilteringTextInputFormatter.digitsOnly,
@@ -55,7 +56,7 @@ TextField buildNumberField(Function function, {isTop = false, isBottom = false, 
               affinity: TextAffinity.downstream, offset: defaultValue.length)))),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: readOnly ? Colors.white54 : Colors.white,
         prefixText: title,
         labelText: title,
         alignLabelWithHint: true,
@@ -81,7 +82,7 @@ Container buildDiv() {
 }
 
 
-TextField buildPriceField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格"}) {
+TextField buildPriceField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格", readOnly = false}) {
   return TextField(
     onChanged: (str) {
       if (str.isNotEmpty) {
@@ -90,6 +91,7 @@ TextField buildPriceField(Function function, {isTop = false, isBottom = false, S
         function(-1);
       }
     },
+    readOnly: readOnly,
     textAlign: TextAlign.right,
     inputFormatters: <TextInputFormatter>[
       PrecisionLimitFormatter(3),
@@ -103,7 +105,7 @@ TextField buildPriceField(Function function, {isTop = false, isBottom = false, S
             affinity: TextAffinity.downstream, offset: defaultValue.length)))),
     decoration: InputDecoration(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: readOnly ? Colors.white54 : Colors.white,
       prefixText: title,
       labelText: title,
       alignLabelWithHint: true,
@@ -117,14 +119,16 @@ TextField buildPriceField(Function function, {isTop = false, isBottom = false, S
   );
 }
 
-TextField buildStringField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格"}) {
+TextField buildStringField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格", autofocus = false, hintText, maxLength = 10, readOnly = false}) {
   return TextField(
     onChanged: (str) {
         function(str);
     },
+    autofocus: autofocus,
+    readOnly: readOnly,
     textAlign: TextAlign.right,
     inputFormatters: <TextInputFormatter>[
-      LengthLimitingTextInputFormatter(10),
+      LengthLimitingTextInputFormatter(maxLength),
     ],
     controller: defaultValue == null ? null : TextEditingController.fromValue(TextEditingValue(
         text: defaultValue,
@@ -136,6 +140,7 @@ TextField buildStringField(Function function, {isTop = false, isBottom = false, 
       fillColor: Colors.white,
       prefixText: title,
       labelText: title,
+      hintText: hintText,
       alignLabelWithHint: true,
       prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
       labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),

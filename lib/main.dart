@@ -13,6 +13,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'GridTransactionList.dart';
+import 'SortVarietyList.dart';
 import 'colors/CardColor.dart';
 import 'colors/CardColorImpl1.dart';
 import 'domain/entity/FoundPrice.dart';
@@ -135,7 +136,8 @@ class _VarietyCardListState extends State<VarietyCardList> {
   Widget _buildItem(BuildContext context, int index) {
 
     if(index == 0) {
-      return Header(_list._items, foundPriceMap);
+      return Header(_list._items, foundPriceMap, (){setState(() {
+      });});
     }
 
     if(index == 1 && _list.length == 0) {
@@ -248,8 +250,9 @@ class Header extends StatefulWidget {
   List<Variety> _varieties;
   Map<String, FoundPrice> _foundPriceMap;
 
+  Function _updateState;
 
-  Header(this._varieties, this._foundPriceMap);
+  Header(this._varieties, this._foundPriceMap, this._updateState);
 
   @override
   _HeaderState createState() => _HeaderState();
@@ -300,9 +303,25 @@ class _HeaderState extends State<Header> {
           ),),
         Padding(
           padding: const EdgeInsets.fromLTRB(3,12,0,0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-              child: Text("我的品种", style: TextStyle(fontSize: 18, ), textAlign: TextAlign.start, )),
+          child: Row(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                  child: Text("我的品种", style: TextStyle(fontSize: 18, ), textAlign: TextAlign.start, )),
+              Flexible(fit: FlexFit.tight, child: SizedBox()),
+
+              IconButton(onPressed: (){
+
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return SortVarietyList(widget._varieties);
+                })).then((value) {
+                  widget._updateState();
+                });
+
+
+              }, icon: Icon(Icons.menu))
+            ],
+          ),
         )
       ],
     );

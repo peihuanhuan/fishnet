@@ -69,7 +69,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
         child: Banner(
           message: "👍🏻",
           location: BannerLocation.topEnd,
-          color: Colors.orange,
+          color: Color(0xffFF8C64),
           child: child,
         ),
       );
@@ -97,11 +97,11 @@ class _GridTransactionListState extends State<GridTransactionList> {
             padding: const EdgeInsets.fromLTRB(leftRightPadding, 12, 12, 6),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [Color(0xFFD5F3F4), Color(0xFFD7FFF0)]), //背景渐变
+                  gradient: LinearGradient(colors: [Color(0xaaFF8C64), Color(0xaaFF8C64)]), //背景渐变
                   shape: BoxShape.circle,
                   boxShadow: [
                     //阴影
-                    BoxShadow(color: Colors.black54, blurRadius: 0.1)
+                    // BoxShadow(color: Colors.yellow, blurRadius: 0.1)
                   ]),
               child: Container(
                 height: 40,
@@ -212,17 +212,6 @@ class _GridTransactionListState extends State<GridTransactionList> {
       })).then((value) {
         updateParentState();
       });
-
-      // showDialog(
-      //     context: context,
-      //     builder: (context) {
-      //       return StatefulBuilder(
-      //         builder: (context, state) {
-      //           return _editorDialogBuilder(context, state, index, buyDefaultTime, (time) => buyDefaultTime = time,
-      //               sellDefaultTime, (time) => sellDefaultTime = time);
-      //         },
-      //       );
-      //     });
     }
     if (item == "remove") {
       showDialog(
@@ -243,105 +232,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     }
   }
 
-  AlertDialog _editorDialogBuilder(BuildContext context, Function state, int index, DateTime buyDefaultTime,
-      Function updateBuyDefaultTime, DateTime sellDefaultTime, Function updateSellDefaultTime) {
-    var transaction = _transactions[index];
 
-    var buyNumber = transaction.buy.number;
-    var buyPrice = transaction.buy.price;
-    var buyTime = buyDefaultTime;
-    var sellPrice = transaction.sell?.price;
-    var sellNumber = transaction.sell?.number;
-    var sellTime = sellDefaultTime;
-
-    var columnChildren = [
-      numberFieldInputWidget("买入价格", (price) => buyPrice = price, defaultValue: buyPrice, limit: 7),
-      numberFieldInputWidget("买入份额", (number) => buyNumber = number, isPrice: true, defaultValue: buyNumber),
-      buildTimePicker(context, "买入时间", buyDefaultTime, (date) {
-        buyTime = date;
-        updateBuyDefaultTime(buyTime);
-        state(() {});
-      }),
-    ];
-
-    if (transaction.sell != null) {
-      columnChildren.add(numberFieldInputWidget("卖出价格", (price) => sellPrice = price,
-          isPrice: true, defaultValue: sellPrice, limit: 7));
-      columnChildren.add(numberFieldInputWidget("卖出份额", (number) => sellNumber = number, defaultValue: sellNumber));
-      columnChildren.add(buildTimePicker(context, "卖出时间", sellDefaultTime, (date) {
-        sellTime = date;
-        updateSellDefaultTime(sellTime);
-        state(() {});
-      }));
-    }
-
-    return AlertDialog(
-      title: Text("修改"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: columnChildren,
-      ),
-      actions: <Widget>[
-        TextButton(
-          child: Text("取消"),
-          onPressed: () => Navigator.of(context).pop(), //关闭对话框
-        ),
-        TextButton(
-          child: Text("确认"),
-          onPressed: () {
-            if (transaction.sell != null && sellNumber > buyNumber) {
-              toast("最多卖 ${transaction.buy.number} 份。");
-              return;
-            }
-            setState(() {
-              transaction.buy.price = buyPrice;
-              transaction.buy.number = buyNumber;
-              transaction.buy.time = buyTime;
-
-              if (transaction.sell != null) {
-                transaction.sell.price = sellPrice;
-                transaction.sell.number = sellNumber;
-                transaction.sell.time = sellTime;
-              }
-
-              _transactions[index] = transaction;
-              saveVariety(_variety);
-            });
-            Navigator.of(context).pop(true); //关闭对话框
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget buildTimePicker(BuildContext context, String title, DateTime date, Function onChange) {
-    return customFieldInputWidget(
-        title,
-        InkWell(
-          onTap: () async {
-            var _result = await showDatePicker(
-              context: context,
-              currentDate: DateTime.now(),
-              initialDate: date,
-              firstDate: DateTime(2015),
-              lastDate: DateTime.now(),
-              locale: Locale('zh'),
-            );
-            if (_result == null) {
-              return;
-            }
-            date = _result;
-            onChange(date);
-          },
-          child: Row(
-            children: [
-              Text(yyyy_MM_ddFormat.format(date)),
-              Icon(Icons.arrow_drop_down),
-              // Icon(Icons.date_range)
-            ],
-          ),
-        ));
-  }
 
   AlertDialog _deleteDialogBuilder(BuildContext context, int index) {
     return AlertDialog(

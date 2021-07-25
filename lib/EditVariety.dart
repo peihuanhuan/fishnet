@@ -1,29 +1,27 @@
+import 'package:fishnet/domain/entity/Variety.dart';
+import 'package:fishnet/persistences/PersistenceLayer.dart';
 import 'package:fishnet/util/CommonWight.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class NewVariety extends StatefulWidget {
+class EditVariety extends StatefulWidget {
 
-  Function _okFunction;
-  NewVariety(this._okFunction, {Key key}) : super(key: key);
+  Variety _variety;
+  EditVariety(this._variety, {Key key}) : super(key: key);
 
   @override
-  _NewVarietyState createState() => _NewVarietyState();
+  _EditVarietyState createState() => _EditVarietyState();
 }
 
-class _NewVarietyState extends State<NewVariety> {
+class _EditVarietyState extends State<EditVariety> {
 
-  int _loading = 0;
-  String _code;
-  num _firstNumber;
-  num _firstPrice;
-  bool enable = false;
-  num _mesh = 0.05;
-  String _tag = "";
+
 
 
   @override
   Widget build(BuildContext context) {
+    String _name = widget._variety.name;
+    String _tag = widget._variety.tag;
 
 
     return new Scaffold(
@@ -37,9 +35,7 @@ class _NewVarietyState extends State<NewVariety> {
           color: Colors.black87, //修改颜色
         ),
         // foregroundColor: Colors.black,
-        title: new Text("新建",
-          style: TextStyle(color: Colors.black87),
-        ),
+        title: new Text("修改", style: TextStyle(color: Colors.black87)),
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -47,67 +43,52 @@ class _NewVarietyState extends State<NewVariety> {
           mainAxisSize: MainAxisSize.min,
           children: [
 
-            buildStringField((value) {
-              _code = value;
-            }, title: "基金代码", isTop: true, hintText: "用于查询名称、净值", maxLength: 6),
+            buildStringField(() {}, title: "基金代码", isTop: true, readOnly: true, defaultValue: widget._variety.code),
             buildDiv(),
 
 
             DropdownButtonFormField<int>(
-              value: (_mesh * 100).toInt(),
+              value: (widget._variety.mesh * 100).toInt(),
               items: items(),
-              onChanged: (value) {
-                setState(() {
-                  _mesh = value / 100;
-                });
-              },
+              onChanged: null,
               decoration: InputDecoration(
                 filled: true,
                 prefixText: "幅度 ",
                 labelText: "幅度 ",
                 labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
                 prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
-                fillColor: Colors.white,
+                fillColor: Colors.white54,
                 floatingLabelBehavior: FloatingLabelBehavior.never,
-                border: UnderlineInputBorder(
-                    borderSide: BorderSide.none),
+                border: UnderlineInputBorder(borderSide: BorderSide.none),
               ),
             ),
             buildDiv(),
 
-            buildPriceField((value) {
-              setStateIfNeed(_firstPrice, value);
-              _firstPrice = value;
-            }, title: "第一网价格"),
+            buildPriceField((value) {}, title: "第一网价格", readOnly: true, defaultValue: widget._variety.firstPrice.toString()),
             buildDiv(),
 
-            buildNumberField((value) {
-              setStateIfNeed(_firstNumber, value);
-              _firstNumber = value;
-            }, title: "第一网数量"),
+            buildNumberField(() {}, title: "第一网数量", readOnly: true, defaultValue: widget._variety.firstNumber.toString()),
             buildDiv(),
 
             buildStringField((value) {
+              _name = value;
+            }, title: "名称", defaultValue: widget._variety.name == "-" ? "" : widget._variety.name, autofocus: true),
+
+            buildStringField((value) {
               _tag = value;
-            }, title: "备注（可选）"),
+            }, title: "备注（可选）", defaultValue: _tag),
             buildDiv(),
 
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 32),
               child: MaterialButton(
-                onPressed: !checkEnable() ? null : (){
+                onPressed: (){
 
 
-                  setState(() {
-                    _loading = 1;
-                  });
+                  widget._variety.name = _name;
+                  widget._variety.tag = _tag;
+                  saveVariety(widget._variety);
 
-                  widget._okFunction(_code, _mesh, _firstPrice, _firstNumber, _tag);
-
-
-                  setState(() {
-                    _loading = 0;
-                  });
                   Navigator.pop(context);
                 },
                 minWidth: double.infinity,
@@ -115,13 +96,7 @@ class _NewVarietyState extends State<NewVariety> {
                 color: Color(0xff279EF8),
                 disabledColor: Color(0xFFC8DFF3),
                 textColor: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("确认操作"),
-                    Container(height: 15.0 * _loading, width: 15, child: CircularProgressIndicator()),
-                  ],
-                ),
+                child: Text("确认操作"),
 
                 shape:
                 RoundedRectangleBorder(side: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(50))),
@@ -133,25 +108,9 @@ class _NewVarietyState extends State<NewVariety> {
     );
   }
 
-  void setStateIfNeed(num a, num b) {
-    // if(a == b) {
-    //   return;
-    // }
-    // if (a * b <= 0) {
-      // 边沿触发
-      setState(() {});
-    // }
-  }
 
   String getControllerText(num defaultValue) => defaultValue == -1 ? "" :  (defaultValue == 0 ? "0" : defaultValue.toString());
 
-  bool checkEnable() {
-    return _code.toString().length >= 1 &&
-        _firstPrice != null &&
-        _firstPrice > 0 &&
-        _firstNumber != null &&
-        _firstNumber > 0;
-  }
 
   List<DropdownMenuItem<int>> items() {
     var items = [3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30];

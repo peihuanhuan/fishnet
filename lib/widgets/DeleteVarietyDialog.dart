@@ -13,21 +13,20 @@ class DeleteVarietyDialog extends StatefulWidget {
 }
 
 class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialog> {
-  num _code;
+  String _code;
   bool enable = false;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("删除品种"),
+      title: Text("删除"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-
-          numberFieldInputWidget("代码", (value) {
+          stringFieldInputWidget("代码", (value) {
             _code = value;
             checkClickable();
-          }, hintText: widget._hintTitle, helperText: "需要输入代码以确认删除"),
+          }, hintText: widget._hintTitle, helperText: "输入代码以确认删除"),
         ],
       ),
       actions: <Widget>[

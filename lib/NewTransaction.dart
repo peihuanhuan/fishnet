@@ -56,8 +56,10 @@ class _NewTransactionState extends State<NewTransaction> {
     }
     _selectedLevel = _selectedOperator.priceNumberPair?.level;
 
-    _price = _selectedOperator.priceNumberPair.price;
-    _number = _selectedOperator.priceNumberPair.number;
+
+    // 可能失败，在 build 里面做的
+    _price = _selectedOperator.priceNumberPair?.price;
+    _number = _selectedOperator.priceNumberPair?.number;
   }
 
   @override
@@ -102,6 +104,8 @@ class _NewTransactionState extends State<NewTransaction> {
                   } else {
                     _selectedOperator = widget._variety.sellOperateWithLevel(_selectedLevel);
                   }
+                  _price = _selectedOperator.priceNumberPair.price;
+                  _number = _selectedOperator.priceNumberPair.number;
                 });
               },
               decoration: InputDecoration(
