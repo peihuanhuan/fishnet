@@ -119,7 +119,7 @@ TextField buildPriceField(Function function, {isTop = false, isBottom = false, S
   );
 }
 
-TextField buildStringField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格", autofocus = false, hintText, maxLength = 10, readOnly = false}) {
+TextField buildStringField(Function function, {isTop = false, isBottom = false, String defaultValue, String title = "价格", autofocus = false, hintText, maxLength = 10, readOnly = false, helperText}) {
   return TextField(
     onChanged: (str) {
         function(str);
@@ -141,6 +141,7 @@ TextField buildStringField(Function function, {isTop = false, isBottom = false, 
       prefixText: title,
       labelText: title,
       hintText: hintText,
+      helperText: helperText,
       alignLabelWithHint: true,
       prefixStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
       labelStyle: TextStyle(color: activeCardColor.mediumEmphasisColor, fontSize: 12),
@@ -289,7 +290,11 @@ Widget stringFieldInputWidget(String title, Function onChange, {int limit = 8,he
           labelText: title,
         helperText: helperText),
         keyboardType: TextInputType.text,
-        controller: TextEditingController()..text = defaultValue.toString(),
+        controller: defaultValue == null ? null : TextEditingController.fromValue(TextEditingValue(
+            text: defaultValue,
+            // 保持光标在最后
+            selection: TextSelection.fromPosition(TextPosition(
+                affinity: TextAffinity.downstream, offset: defaultValue.length)))),
         inputFormatters: <TextInputFormatter>[
           FilteringTextInputFormatter.singleLineFormatter,
           LengthLimitingTextInputFormatter(limit),

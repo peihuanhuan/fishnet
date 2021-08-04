@@ -26,7 +26,7 @@ class _DeleteVarietyDialogStatefulWidget extends State<DeleteVarietyDialog> {
           stringFieldInputWidget("代码", (value) {
             _code = value;
             checkClickable();
-          }, hintText: widget._hintTitle, helperText: "输入代码以确认删除"),
+          }, hintText: widget._hintTitle, helperText: "输入代码以确认删除", defaultValue: _code),
         ],
       ),
       actions: <Widget>[

@@ -3,6 +3,17 @@
    <application
         android:label="网格账本"
         android:icon="@mipmap/ic_launcher">
+
+       <provider
+               android:name="androidx.core.content.FileProvider"
+               android:authorities="${applicationId}.fileprovider"
+               android:exported="false"
+               android:grantUriPermissions="true">
+           <meta-data
+                   android:name="android.support.FILE_PROVIDER_PATHS"
+                   android:resource="@xml/file_paths" />
+       </provider>
+
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -50,4 +61,5 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- 获取当前设备存储权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 </manifest>

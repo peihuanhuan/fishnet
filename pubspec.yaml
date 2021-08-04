@@ -28,6 +28,9 @@ dependencies:
   fluttertoast: ^8.0.7
   flutter_speed_dial: ^1.2.4
   shared_preferences:
+#  flutter_xupdate: ^2.0.0
+  flutter_app_upgrade: ^1.1.0
+#  r_upgrade: ^0.3.5
   flutter_localizations:
     sdk: flutter
 #  sqflite:

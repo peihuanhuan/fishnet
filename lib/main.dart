@@ -9,6 +9,7 @@ import 'package:fishnet/widgets/DeleteVarietyDialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fishnet/MyCardItem.dart';
+import 'package:flutter_app_upgrade/flutter_app_upgrade.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -23,8 +24,24 @@ import 'persistences/PersistenceLayer.dart';
 
 
 void main() {
-  runApp(new VarietyCardList());
+  runApp(new Main());
 }
+
+class Main extends StatefulWidget {
+
+  @override
+  _MainState createState() => _MainState();
+}
+
+class _MainState extends State<Main> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: VarietyCardList()
+    );
+  }
+}
+
 
 class VarietyCardList extends StatefulWidget {
   @override
@@ -38,10 +55,95 @@ class _VarietyCardListState extends State<VarietyCardList> {
   final GlobalKey<AnimatedListState> _listKey = new GlobalKey<AnimatedListState>();
   ListModel<Variety> _list;
 
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        scaffoldBackgroundColor: activeCardColor.bgColor,
+      ),
+      home: new Scaffold(
+        floatingActionButton: AddVarietyFloat(
+                (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
+                (_code, _mesh, _firstPrice, _firstNumber) {
+              return _code.toString().length == 6 &&
+                  _firstPrice != null &&
+                  _firstPrice > 0 &&
+                  _firstNumber != null &&
+                  _firstNumber > 100;
+            }),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        body: SafeArea( // 自动处理刘海屏
+          child: RefreshIndicator(
+            onRefresh: () async {
+              update();
+            },
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ListView.builder(
+                      key: _listKey,
+                      itemCount: max(_list.length, 1) + 1,
+                      itemBuilder: _buildItem,
+                    ),
+                  ),
+                ),],),),),
+      ),
+      localizationsDelegates: [
+        //此处 系统是什么语言就显示什么语言
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        //此处 系统是什么语言就显示什么语言
+        const Locale('zh', 'CH'),
+        const Locale('en', 'US'),
+      ],
+    );
+  }
+
+
   @override
   void initState() {
     update();
+
+
+    AppUpgrade.appUpgrade(
+      context,
+      _checkAppInfo(),
+      iosAppId: 'id88888888',
+    );
+
+
+    // initXUpdate();
+    // FlutterXUpdate.checkUpdate(url: "https://fishnet-api.peihuan.net/update");
+
   }
+
+  Future<AppUpgradeInfo> _checkAppInfo() async {
+    //这里一般访问网络接口，将返回的数据解析成如下格式
+
+    var appInfo = await FlutterUpgrade.appInfo;
+
+    var lastInfo = await getLastVersion();
+    if(lastInfo == null || int.parse(appInfo.versionCode) >= lastInfo.versionCode) {
+      return null;
+    }
+
+    return Future.delayed(Duration(seconds: 1), () {
+      return AppUpgradeInfo(
+        title: '新版本 v${lastInfo.versionName}',
+        contents: [
+          lastInfo.modifyContent
+        ],
+        force: lastInfo.force,
+        apkDownloadUrl: lastInfo.downloadUrl
+      );
+    });
+  }
+
 
   Future update() async {
     if (_list == null) {
@@ -80,58 +182,7 @@ class _VarietyCardListState extends State<VarietyCardList> {
     setState(() {});
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return new MaterialApp(
-      theme: ThemeData(
-        scaffoldBackgroundColor: activeCardColor.bgColor,
-      ),
-      home: new Scaffold(
-        floatingActionButton: AddVarietyFloat(
-            (_code, _mesh, _firstPrice, _firstNumber, _tag) => _insert(_code, _mesh, _firstPrice, _firstNumber, _tag),
-            (_code, _mesh, _firstPrice, _firstNumber) {
-          return _code.toString().length == 6 &&
-              _firstPrice != null &&
-              _firstPrice > 0 &&
-              _firstNumber != null &&
-              _firstNumber > 100;
-        }),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        body: SafeArea( // 自动处理刘海屏
-          child: RefreshIndicator(
-            onRefresh: () async {
-              update();
-            },
-            child: Column(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ListView.builder(
-                      key: _listKey,
-                      itemCount: max(_list.length, 1) + 1,
-                      itemBuilder: _buildItem,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
 
-      ),
-      localizationsDelegates: [
-        //此处 系统是什么语言就显示什么语言
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: [
-        //此处 系统是什么语言就显示什么语言
-        const Locale('zh', 'CH'),
-        const Locale('en', 'US'),
-      ],
-    );
-  }
 
   Widget _buildItem(BuildContext context, int index) {
 

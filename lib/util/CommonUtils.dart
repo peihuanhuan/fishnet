@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:decimal/decimal.dart';
 import 'package:fishnet/colors/CardColor.dart';
+import 'package:fishnet/domain/dto/upgrade_info.dart';
 import 'package:fishnet/domain/entity/FoundPrice.dart';
 import 'package:fishnet/domain/entity/Variety.dart';
 
@@ -94,5 +95,20 @@ Future<String> queryName(String code) async {
     return "-";
   } on SocketException catch (_) {
     return "-";
+  }
+}
+
+
+Future<UpgradeInfo> getLastVersion() async {
+  try {
+    var request = await httpClient.getUrl(Uri.parse("https://fishnet-api.peihuan.net/upgrade"));
+    var response = await request.close().timeout(Duration(seconds: 5));
+    var responseBody = await response.transform(utf8.decoder).join();
+
+    return UpgradeInfo.fromJson(json.decode(responseBody));
+  } on TimeoutException catch (_) {
+    return null;
+  } on SocketException catch (_) {
+    return null;
   }
 }
