@@ -32,7 +32,7 @@ class Variety {
   num predictCurrentLevel(num currentPrice) {
     num level = 1;
     if (currentPrice > (level + mesh / 2) * firstPrice) {
-      return 1;
+      return addAccurately(1, mesh);
     }
     while (level > 0) {
       if (currentPrice > (level - mesh / 2) * firstPrice && currentPrice < (level + mesh / 2) * firstPrice) {
