@@ -171,14 +171,14 @@ BorderRadius borderRadius(bool isTop, bool isBottom) {
   return BorderRadius.vertical(top: top, bottom: bottom);
 }
 
-TextField buildDateField(BuildContext context, DateTime initDate, Function onChange) {
+TextField buildDateField(BuildContext context, DateTime initDate, Function onChange, {DateTime firstDate}) {
   return TextField(
     onTap: () async {
       var _result = await showDatePicker(
         context: context,
         currentDate: DateTime.now(),
         initialDate: initDate,
-        firstDate: DateTime(2015),
+        firstDate: firstDate == null ? DateTime(2015) : firstDate,
         lastDate: DateTime.now(),
         locale: Locale('zh'),
       );

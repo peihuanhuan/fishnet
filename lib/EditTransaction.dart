@@ -65,10 +65,13 @@ class _EditTransactionState extends State<EditTransaction> {
         _buyPrice = value;
       }, isTop: true, defaultValue: getControllerText(_buyPrice)),
       buildDiv(),
-      buildNumberField((value) {
-        setStateIfNeed(_buyNumber, value);
-        _buyNumber = value;
-      },defaultValue: getControllerText(_buyNumber), ),
+      buildNumberField(
+        (value) {
+          setStateIfNeed(_buyNumber, value);
+          _buyNumber = value;
+        },
+        defaultValue: getControllerText(_buyNumber),
+      ),
       buildDiv(),
       buildDateField(context, _buyDate, (value) {
         setState(() {
@@ -113,6 +116,17 @@ class _EditTransactionState extends State<EditTransaction> {
         onPressed: !checkEnable()
             ? null
             : () {
+                if (_transactions.sell != null) {
+                  if(_sellNumber > _buyNumber) {
+                    toast("卖出数量不能大于买入数量");
+                    return;
+                  }
+                  if(_sellDate.millisecondsSinceEpoch < _buyDate.millisecondsSinceEpoch) {
+                    toast("卖出时间不能早于买入时间");
+                    return;
+                  }
+                }
+
                 _transactions.buy.price = _buyPrice;
                 _transactions.buy.number = _buyNumber;
                 _transactions.buy.time = _buyDate;
@@ -131,7 +145,9 @@ class _EditTransactionState extends State<EditTransaction> {
         disabledColor: Color(0xFFC8DFF3),
         textColor: Colors.white,
         child: Text("确认操作"),
-        shape: RoundedRectangleBorder(side: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(50))),
+        shape: RoundedRectangleBorder(
+            side: BorderSide.none,
+            borderRadius: BorderRadius.all(Radius.circular(50))),
       ),
     ));
     return new Scaffold(
@@ -165,19 +181,19 @@ class _EditTransactionState extends State<EditTransaction> {
     if (_transactions.sell == null) {
       return _buyNumber > 0 && _buyPrice > 0;
     } else {
-      return _buyNumber > 0 && _buyPrice > 0 && _sellNumber > 0 && _sellPrice > 0;
+      return _buyNumber > 0 &&
+          _buyPrice > 0 &&
+          _sellNumber > 0 &&
+          _sellPrice > 0;
     }
   }
 
-
-
-
-
-  String getControllerText(num defaultValue) => defaultValue == -1 ? "" :  (defaultValue == 0 ? "0" : defaultValue.toString());
-
+  String getControllerText(num defaultValue) => defaultValue == -1
+      ? ""
+      : (defaultValue == 0 ? "0" : defaultValue.toString());
 
   void setStateIfNeed(num a, num b) {
-    if(a == b) {
+    if (a == b) {
       return;
     }
     if (a * b <= 0) {

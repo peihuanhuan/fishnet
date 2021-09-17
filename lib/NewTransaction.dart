@@ -20,22 +20,20 @@ class NewTransaction extends StatefulWidget {
   bool _buy;
   num _currentPrice;
 
-  num _selectLevel;
+  num _selectId;
 
-  NewTransaction(this._variety, this._currentPrice, this._buy, [this._selectLevel]);
+
+  NewTransaction(this._variety, this._currentPrice, this._buy, [this._selectId]);
 
   @override
   _NewTransactionState createState() {
     var shouldOperator = _variety.quickOperate(_buy, _currentPrice);
 
-    if (_selectLevel == null) {
-      return _NewTransactionState(shouldOperator);
+    if (_selectId != null && !_buy) {
+      // 只有卖的时候才会指定 id
+      return _NewTransactionState(_variety, shouldOperator, _selectId);
     } else {
-      if (_buy) {
-        return _NewTransactionState(shouldOperator, _variety.buyOperateWithLevel(_selectLevel));
-      } else {
-        return _NewTransactionState(shouldOperator, _variety.sellOperateWithLevel(_selectLevel));
-      }
+      return _NewTransactionState(_variety, shouldOperator);
     }
   }
 }
@@ -47,12 +45,14 @@ class _NewTransactionState extends State<NewTransaction> {
   DateTime _date = DateTime.now();
   Operator _selectedOperator;
   Operator _shouldOperator;
+  Variety _variety;
 
-  _NewTransactionState(this._shouldOperator, [selectedOperator]) {
-    if (selectedOperator == null) {
+  _NewTransactionState(this._variety, this._shouldOperator, [selectedId]) {
+    if (selectedId == null) {
       _selectedOperator = _shouldOperator;
     } else {
-      _selectedOperator = selectedOperator;
+      var sellOperateWithId = _variety.sellOperateWithId(selectedId);
+      _selectedOperator = sellOperateWithId;
     }
     _selectedLevel = _selectedOperator.priceNumberPair?.level;
 
@@ -139,7 +139,7 @@ class _NewTransactionState extends State<NewTransaction> {
               setState(() {
                 _date = value;
               });
-            }),
+            }, firstDate: _selectedOperator.buyDate),
 
             Padding(
               padding: const EdgeInsets.only(top: 3.0, bottom: 8),
@@ -181,7 +181,7 @@ class _NewTransactionState extends State<NewTransaction> {
               child: MaterialButton(
                 onPressed: !checkEnable() ? null : (){
                   if (widget._buy) {
-                    Trade buy = Trade(id(), _price, _number, DateTime.now());
+                    Trade buy = Trade(id(), _price, _number, _date);
                     var twoDirectionTransactions =
                         TwoDirectionTransactions(id(), _selectedOperator.priceNumberPair.level, buy, null);
                     widget._variety.transactions.add(twoDirectionTransactions);

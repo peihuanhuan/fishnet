@@ -6,15 +6,18 @@ class Operator{
   String extraMessage;
   String failMessage;
 
-  Operator._(this.priceNumberPair, this.extraMessage, this.failMessage);
+  // 买入时间 （如果是卖出的话）
+  DateTime buyDate;
+
+  Operator._(this.priceNumberPair, this.extraMessage, this.failMessage, [this.buyDate]);
 
   bool isSuccess() {
     return priceNumberPair != null;
   }
 
 
-  static Operator success(PriceNumberPair priceNumberPair, {extraMessage}) {
-    return Operator._(priceNumberPair, extraMessage, null);
+  static Operator success(PriceNumberPair priceNumberPair, {extraMessage, buyDate}) {
+    return Operator._(priceNumberPair, extraMessage, null, buyDate);
   }
 
   static Operator fail(String failMessage) {

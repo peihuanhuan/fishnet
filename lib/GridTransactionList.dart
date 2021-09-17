@@ -224,7 +224,7 @@ class _GridTransactionListState extends State<GridTransactionList> {
     if (item == "sell") {
 
       Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return NewTransaction(_variety, widget._currentPrice, false, transaction.level);
+        return NewTransaction(_variety, widget._currentPrice, false, transaction.id);
       })).then((value) {
         updateParentState();
       });

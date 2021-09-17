@@ -48,11 +48,23 @@ class Variety {
     var price = calcPrice(currentPriceLevel, true);
     for (var value in transactions) {
       if(value.level == currentPriceLevel && value.sell == null) {
-          return Operator.success(price, extraMessage: "已买入一网尚未卖出。");
+        return Operator.success(price, extraMessage: "已买入一网尚未卖出。");
       }
     }
 
     return Operator.success(price);
+  }
+
+
+  Operator sellOperateWithId(num id) {
+    for (var value in transactions) {
+      if(value.id == id) {
+        var price = calcPrice(value.level, false);
+        return Operator.success(price, buyDate: value.buy.time);
+      }
+    }
+
+    return Operator.fail("内部错误： 未找到 id");
   }
 
 
@@ -77,7 +89,7 @@ class Variety {
       if (v.level < currentPriceLevel) {
         msg = "有价格更低，但未卖出的网，请注意。";
       } else if (v.level == currentPriceLevel) {
-        return Operator.success(calcPrice(currentPriceLevel, false), extraMessage: msg);
+        return Operator.success(calcPrice(currentPriceLevel, false), extraMessage: msg, buyDate: v.buy.time);
       }
     }
     return Operator.fail("现在的价格，没有匹配到可以卖出的网。");
@@ -137,7 +149,7 @@ class Variety {
     if (!buy) {
       if (lastTransaction.sell == null) {
         // 卖这个 档位的价钱
-        return Operator.success(calcPrice(lastTransaction.level, buy));
+        return Operator.success(calcPrice(lastTransaction.level, buy), buyDate: lastTransaction.buy.time);
       } else {
 
         // 还要再往上卖一个档位
@@ -150,7 +162,7 @@ class Variety {
         ts.sort((a, b) => b.buy.time.microsecond.compareTo(a.buy.time.microsecond));
         for (var transaction in ts) {
           if (transaction.level == lastLevel && transaction.sell == null) {
-            return Operator.success(calcPrice(lastLevel, buy));
+            return Operator.success(calcPrice(lastLevel, buy), buyDate: lastTransaction.buy.time);
           }
         }
 
